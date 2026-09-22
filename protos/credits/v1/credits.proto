@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package dancehub.credits.v1;
+
+option go_package = "github.com/JayceeWU/microservices-demo/dancehub/gen/credits/v1;creditsv1";
+
+import "common/v1/common.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+service CreditService {
+  rpc GetBalances(GetBalancesRequest) returns (GetBalancesResponse) { option (google.api.http) = { get: "/v1/credits/balances" }; }
+  rpc ListGrants(ListGrantsRequest) returns (ListGrantsResponse) { option (google.api.http) = { get: "/v1/credits/grants" }; }
+  rpc ListLedger(ListLedgerRequest) returns (ListLedgerResponse) { option (google.api.http) = { get: "/v1/credits/ledger" }; }
+  rpc CompensateBookingHold(CompensateBookingHoldRequest) returns (GrantOperationResponse);
+  rpc PlaceHold(PlaceHoldRequest) returns (CreditHold);
+  rpc ReleaseHold(ReleaseHoldRequest) returns (CreditHold);
+  rpc CaptureHold(CaptureHoldRequest) returns (CreditHold);
+  rpc ReverseCapture(ReverseCaptureRequest) returns (CreditHold);
+  rpc GrantFromOrder(GrantFromOrderRequest) returns (Grant);
+  rpc RequestUnusedProductRefund(RequestUnusedProductRefundRequest) returns (RefundEligibility);
+  rpc ReserveRefund(ReserveRefundRequest) returns (GrantOperationResponse);
+  rpc ReleaseRefund(ReleaseRefundRequest) returns (GrantOperationResponse);
+  rpc RevokeRefundedGrant(RevokeRefundedGrantRequest) returns (GrantOperationResponse);
+  rpc TransferGrant(TransferGrantRequest) returns (GrantOperationResponse) { option (google.api.http) = { post: "/v1/credits/grants/{grant_id}/transfer" body: "*" }; }
+  rpc PauseGrant(PauseGrantRequest) returns (GrantOperationResponse) { option (google.api.http) = { post: "/v1/credits/grants/{grant_id}/pause" body: "*" }; }
+  rpc ResumeGrant(ResumeGrantRequest) returns (GrantOperationResponse) { option (google.api.http) = { post: "/v1/credits/grants/{grant_id}/resume" body: "*" }; }
+}
+
+enum GrantStatus { GRANT_STATUS_UNSPECIFIED = 0; GRANT_STATUS_ACTIVE = 1; GRANT_STATUS_PAUSED = 2; GRANT_STATUS_TRANSFERRED = 3; GRANT_STATUS_REVOKED = 4; }
+enum LedgerKind { LEDGER_KIND_UNSPECIFIED = 0; LEDGER_KIND_GRANT = 1; LEDGER_KIND_HOLD = 2; LEDGER_KIND_RELEASE = 3; LEDGER_KIND_CAPTURE = 4; LEDGER_KIND_REVERSAL = 5; LEDGER_KIND_REFUND = 6; LEDGER_KIND_ADJUSTMENT = 7; LEDGER_KIND_ENTITLEMENT_USE = 8; LEDGER_KIND_TRANSFER_OUT = 9; LEDGER_KIND_TRANSFER_IN = 10; }
+enum CreditHoldStatus { CREDIT_HOLD_STATUS_UNSPECIFIED = 0; CREDIT_HOLD_STATUS_ACTIVE = 1; CREDIT_HOLD_STATUS_CAPTURED = 2; CREDIT_HOLD_STATUS_RELEASED = 3; CREDIT_HOLD_STATUS_REVERSED = 4; }
+enum IssuerScope { ISSUER_SCOPE_UNSPECIFIED = 0; ISSUER_SCOPE_STUDIO = 1; ISSUER_SCOPE_PLATFORM = 2; }
+message RefundLineRequirement { string order_line_id = 1; int32 quantity = 2; }
+message CompensateBookingHoldRequest { string booking_id = 1; string user_id = 2; string studio_id = 3; dancehub.common.v1.AuditContext audit = 4; }
+message Balance { string studio_id = 1; dancehub.common.v1.CreditAmount available = 2; bool unlimited_active = 3; }
+message Grant { string id = 1; string user_id = 2; string studio_id = 3; dancehub.common.v1.CreditAmount remaining = 4; google.protobuf.Timestamp expires_at = 5; bool unlimited = 6; GrantStatus status = 7; google.protobuf.Timestamp paused_at = 8; int64 remaining_validity_seconds = 9; bool final_sale = 10; }
+message LedgerEntry { string id = 1; string studio_id = 2; string grant_id = 3; string booking_id = 4; LedgerKind kind = 5; int32 credit_delta = 6; string reason = 7; google.protobuf.Timestamp created_at = 8; }
+message CreditHold { string id = 1; string booking_id = 2; dancehub.common.v1.CreditAmount amount = 3; CreditHoldStatus status = 4; }
+message GetBalancesRequest {}
+message GetBalancesResponse { repeated Balance balances = 1; }
+message ListGrantsRequest { dancehub.common.v1.PageRequest page = 1; }
+message ListGrantsResponse { repeated Grant grants = 1; dancehub.common.v1.PageResponse page = 2; }
+message ListLedgerRequest { dancehub.common.v1.PageRequest page = 1; }
+message ListLedgerResponse { repeated LedgerEntry entries = 1; dancehub.common.v1.PageResponse page = 2; }
+message PlaceHoldRequest { string studio_id = 1; string booking_id = 2; dancehub.common.v1.CreditAmount amount = 3; google.protobuf.Timestamp class_starts_at = 4; dancehub.common.v1.AuditContext audit = 5; }
+message ReleaseHoldRequest { string hold_id = 1; dancehub.common.v1.AuditContext audit = 2; }
+message CaptureHoldRequest { string hold_id = 1; dancehub.common.v1.AuditContext audit = 2; }
+message ReverseCaptureRequest { string hold_id = 1; dancehub.common.v1.AuditContext audit = 2; }
+message CreditsEntitlement { dancehub.common.v1.CreditAmount amount = 1; int32 validity_days = 2; }
+message UnlimitedEntitlement { int32 validity_days = 1; }
+message EntitlementSnapshot { string studio_id = 1; IssuerScope issuer_scope = 2; oneof entitlement { CreditsEntitlement credits = 3; UnlimitedEntitlement unlimited = 4; } bool final_sale = 5; }
+message GrantFromOrderRequest { string order_line_id = 1; string product_version_id = 2; dancehub.common.v1.AuditContext audit = 3; EntitlementSnapshot entitlement = 4; string user_id = 5; }
+message RequestUnusedProductRefundRequest { string order_id = 1; dancehub.common.v1.AuditContext audit = 2; string user_id = 3; repeated string order_line_ids = 4;  repeated RefundLineRequirement requirements = 5; string attempt_id = 6; }
+message RefundEligibility { bool eligible = 1; string reason = 2; }
+message ReserveRefundRequest { string order_id = 1; dancehub.common.v1.AuditContext audit = 2; string user_id = 3; repeated string order_line_ids = 4;  repeated RefundLineRequirement requirements = 5; string attempt_id = 6; }
+message ReleaseRefundRequest { string order_id = 1; dancehub.common.v1.AuditContext audit = 2; string user_id = 3; repeated string order_line_ids = 4;  repeated RefundLineRequirement requirements = 5; string attempt_id = 6; }
+message RevokeRefundedGrantRequest { string order_id = 1; dancehub.common.v1.AuditContext audit = 2; string user_id = 3; repeated string order_line_ids = 4;  repeated RefundLineRequirement requirements = 5; string attempt_id = 6; }
+message TransferGrantRequest { string grant_id = 1; string target_user_id = 2; dancehub.common.v1.AuditContext audit = 3; }
+message PauseGrantRequest { string grant_id = 1; dancehub.common.v1.AuditContext audit = 2; }
+message ResumeGrantRequest { string grant_id = 1; dancehub.common.v1.AuditContext audit = 2; }
+message GrantOperationResponse { string operation = 1; string grant_id = 2; string successor_grant_id = 3; string status = 4; google.protobuf.Timestamp expires_at = 5; }

@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package dancehub.scheduling.v1;
+
+option go_package = "github.com/JayceeWU/microservices-demo/dancehub/gen/scheduling/v1;schedulingv1";
+
+import "common/v1/common.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+service SchedulingService {
+  rpc SearchClassSessions(SearchClassSessionsRequest) returns (SearchClassSessionsResponse) { option (google.api.http) = { get: "/v1/class-sessions" }; }
+  rpc GetClassSession(GetClassSessionRequest) returns (ClassSession) { option (google.api.http) = { get: "/v1/class-sessions/{id}" }; }
+  rpc ListMyBookings(ListMyBookingsRequest) returns (ListMyBookingsResponse) { option (google.api.http) = { get: "/v1/bookings" }; }
+  rpc GetRoster(GetRosterRequest) returns (GetRosterResponse) { option (google.api.http) = { get: "/v1/class-sessions/{class_session_id}/roster" }; }
+  rpc SubmitScheduleRequest(SubmitScheduleRequestRequest) returns (ClassSession);
+  rpc ReviewScheduleRequest(ReviewScheduleRequestRequest) returns (ClassSession);
+  rpc BookClass(BookClassRequest) returns (Booking) { option (google.api.http) = { post: "/v1/bookings" body: "*" }; }
+  rpc CancelBooking(CancelBookingRequest) returns (Booking) { option (google.api.http) = { post: "/v1/bookings/{booking_id}:cancel" body: "*" }; }
+  rpc CorrectAttendance(CorrectAttendanceRequest) returns (Booking);
+  rpc AddWalkInRedemption(AddWalkInRedemptionRequest) returns (Booking) { option (google.api.http) = { post: "/v1/class-sessions/{class_session_id}/walk-ins" body: "*" }; }
+  rpc ReverseClassRedemption(ReverseClassRedemptionRequest) returns (Booking);
+  rpc ConfirmClassCompleted(ConfirmClassCompletedRequest) returns (ClassSession) { option (google.api.http) = { post: "/v1/class-sessions/{class_session_id}/complete" body: "*" }; }
+  rpc CancelClassByStudio(CancelClassByStudioRequest) returns (ClassSession) { option (google.api.http) = { post: "/v1/class-sessions/{class_session_id}/cancel" body: "*" }; }
+  rpc UpdateClassVideo(UpdateClassVideoRequest) returns (ClassSession) { option (google.api.http) = { patch: "/v1/class-sessions/{class_session_id}/video" body: "*" }; }
+  rpc CreateRoomHold(CreateRoomHoldRequest) returns (RoomReservation) { option (google.api.http) = { post: "/v1/room-reservations" body: "*" }; }
+  rpc GetRoomReservation(GetRoomReservationRequest) returns (RoomReservation);
+  rpc ConfirmRoomReservation(ConfirmRoomReservationRequest) returns (RoomReservation);
+  rpc ReleaseRoomReservation(ReleaseRoomReservationRequest) returns (RoomReservation);
+}
+
+enum ClassStatus { CLASS_STATUS_UNSPECIFIED = 0; CLASS_STATUS_PENDING_APPROVAL = 1; CLASS_STATUS_APPROVED = 2; CLASS_STATUS_OPEN = 3; CLASS_STATUS_MINIMUM_CONFIRMED = 4; CLASS_STATUS_AWAITING_ADMIN_CONFIRMATION = 5; CLASS_STATUS_COMPLETED = 6; CLASS_STATUS_CANCELLED = 7; }
+enum BookingStatus { BOOKING_STATUS_UNSPECIFIED = 0; BOOKING_STATUS_PENDING_CREDIT = 1; BOOKING_STATUS_CONFIRMED = 2; BOOKING_STATUS_CHARGED = 3; BOOKING_STATUS_ATTENDED = 4; BOOKING_STATUS_NO_SHOW = 5; BOOKING_STATUS_CANCELLED = 6; BOOKING_STATUS_REVERSED = 7; }
+enum RoomReservationStatus { ROOM_RESERVATION_STATUS_UNSPECIFIED = 0; ROOM_RESERVATION_STATUS_HOLD = 1; ROOM_RESERVATION_STATUS_PENDING_PAYMENT = 2; ROOM_RESERVATION_STATUS_CONFIRMED = 3; ROOM_RESERVATION_STATUS_EXPIRED = 4; ROOM_RESERVATION_STATUS_REFUND_PENDING = 5; ROOM_RESERVATION_STATUS_REFUNDED = 6; ROOM_RESERVATION_STATUS_CANCELLED = 7; }
+message ClassSession { string id = 1; string studio_id = 2; string room_id = 3; string teacher_id = 4; string title = 5; string description = 6; dancehub.common.v1.TimeRange time_range = 7; reserved 8; int32 capacity = 9; int32 minimum_students = 10; dancehub.common.v1.CreditAmount credit_cost = 11; int32 confirmed_count = 12; ClassStatus status = 13; string video_url = 14; }
+message Booking { string id = 1; string studio_id = 2; string class_session_id = 3; string student_id = 4; BookingStatus status = 5; bool is_walk_in = 6; bool credit_compensation_pending = 7; }
+message RoomReservation { string id = 1; string studio_id = 2; string room_id = 3; string student_id = 4; dancehub.common.v1.TimeRange time_range = 5; reserved 6; dancehub.common.v1.Money amount = 7; RoomReservationStatus status = 8; google.protobuf.Timestamp hold_expires_at = 9; }
+message SearchClassSessionsRequest { string studio_id = 1; string teacher_id = 2; dancehub.common.v1.PageRequest page = 3; optional bool bookable_only = 4; }
+message SearchClassSessionsResponse { repeated ClassSession sessions = 1; dancehub.common.v1.PageResponse page = 2; }
+message GetClassSessionRequest { string id = 1; }
+message ListMyBookingsRequest { dancehub.common.v1.PageRequest page = 1; }
+message ListMyBookingsResponse { repeated Booking bookings = 1; dancehub.common.v1.PageResponse page = 2; }
+message GetRosterRequest { string class_session_id = 1; dancehub.common.v1.PageRequest page = 2; }
+message GetRosterResponse { repeated Booking bookings = 1; dancehub.common.v1.PageResponse page = 2; }
+message SubmitScheduleRequestRequest { ClassSession proposed = 1; dancehub.common.v1.AuditContext audit = 2; }
+message ReviewScheduleRequestRequest { string class_session_id = 1; bool approve = 2; int32 minimum_students = 3; dancehub.common.v1.AuditContext audit = 4; }
+message BookClassRequest { string class_session_id = 1; dancehub.common.v1.AuditContext audit = 2; }
+message CancelBookingRequest { string booking_id = 1; dancehub.common.v1.AuditContext audit = 2; }
+message CorrectAttendanceRequest { string booking_id = 1; bool attended = 2; dancehub.common.v1.AuditContext audit = 3; }
+message AddWalkInRedemptionRequest { string class_session_id = 1; string student_id = 2; dancehub.common.v1.AuditContext audit = 3; }
+message ReverseClassRedemptionRequest { string booking_id = 1; dancehub.common.v1.AuditContext audit = 2; }
+message ConfirmClassCompletedRequest { string class_session_id = 1; dancehub.common.v1.AuditContext audit = 2; }
+message CancelClassByStudioRequest { string class_session_id = 1; dancehub.common.v1.AuditContext audit = 2; }
+message UpdateClassVideoRequest { string class_session_id = 1; string video_url = 2; dancehub.common.v1.AuditContext audit = 3; }
+message CreateRoomHoldRequest { string studio_id = 1; string room_id = 2; dancehub.common.v1.TimeRange time_range = 3; dancehub.common.v1.AuditContext audit = 4; }
+message GetRoomReservationRequest { string room_reservation_id = 1; }
+message ConfirmRoomReservationRequest { string room_reservation_id = 1; string order_id = 2; dancehub.common.v1.AuditContext audit = 3; }
+message ReleaseRoomReservationRequest { string room_reservation_id = 1; dancehub.common.v1.AuditContext audit = 2; }

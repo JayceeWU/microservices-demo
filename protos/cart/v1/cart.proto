@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package dancehub.cart.v1;
+
+option go_package = "github.com/JayceeWU/microservices-demo/dancehub/gen/cart/v1;cartv1";
+
+import "common/v1/common.proto";
+import "google/api/annotations.proto";
+
+service CartService {
+  rpc AddItem(AddItemRequest) returns (Cart) { option (google.api.http) = { post: "/v1/cart/items" body: "*" }; }
+  rpc GetCart(GetCartRequest) returns (Cart) { option (google.api.http) = { get: "/v1/cart" }; }
+  rpc RemoveItem(RemoveItemRequest) returns (Cart) { option (google.api.http) = { delete: "/v1/cart/items/{product_version_id}" }; }
+  rpc EmptyCart(EmptyCartRequest) returns (Cart) { option (google.api.http) = { delete: "/v1/cart" }; }
+}
+
+message CartItem { string product_version_id = 1; int32 quantity = 2; }
+message Cart { string user_id = 1; string studio_id = 2; string issuer_scope = 3; repeated CartItem items = 4; }
+message AddItemRequest { string studio_id = 1; string issuer_scope = 2; CartItem item = 3; dancehub.common.v1.AuditContext audit = 4; }
+message GetCartRequest {}
+message RemoveItemRequest { string product_version_id = 1; dancehub.common.v1.AuditContext audit = 2; }
+message EmptyCartRequest { dancehub.common.v1.AuditContext audit = 1; }

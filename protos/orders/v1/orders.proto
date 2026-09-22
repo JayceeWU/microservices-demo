@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package dancehub.orders.v1;
+
+option go_package = "github.com/JayceeWU/microservices-demo/dancehub/gen/orders/v1;ordersv1";
+
+import "common/v1/common.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+service OrderService {
+  rpc CreateOrderFromCart(CreateOrderFromCartRequest) returns (Order) { option (google.api.http) = { post: "/v1/orders" body: "*" }; }
+  rpc CreateRoomOrder(CreateRoomOrderRequest) returns (Order) { option (google.api.http) = { post: "/v1/room-orders" body: "*" }; }
+  rpc GetOrder(GetOrderRequest) returns (Order) { option (google.api.http) = { get: "/v1/orders/{id}" }; }
+  rpc RequestRefund(RequestRefundRequest) returns (Order) { option (google.api.http) = { post: "/v1/orders/{id}/refund" body: "*" }; }
+  rpc ApproveRefund(ApproveRefundRequest) returns (Order) { option (google.api.http) = { post: "/v1/orders/{id}/refund/approve" body: "*" }; }
+  rpc RejectRefund(RejectRefundRequest) returns (Order) { option (google.api.http) = { post: "/v1/orders/{id}/refund/reject" body: "*" }; }
+  rpc CancelRoomReservation(CancelRoomReservationRequest) returns (Order) { option (google.api.http) = { post: "/v1/room-reservations/{room_reservation_id}/cancel" body: "*" }; }
+  rpc ReserveFlashSalePurchase(ReserveFlashSalePurchaseRequest) returns (FlashSaleRequest) { option (google.api.http) = { post: "/v1/flash-sales/{campaign_id}/reservations" body: "*" }; }
+  rpc GetFlashSaleRequest(GetFlashSaleRequestRequest) returns (FlashSaleRequest) { option (google.api.http) = { get: "/v1/flash-sale-requests/{request_id}" }; }
+  rpc MarkPaymentSucceeded(MarkPaymentSucceededRequest) returns (Order);
+  rpc MarkPaymentFailed(MarkPaymentFailedRequest) returns (Order);
+}
+
+enum OrderStatus { ORDER_STATUS_UNSPECIFIED = 0; ORDER_STATUS_DRAFT = 1; ORDER_STATUS_PENDING_PAYMENT = 2; ORDER_STATUS_PAID = 3; ORDER_STATUS_PAID_NOT_FULFILLED = 4; ORDER_STATUS_FULFILLED = 5; ORDER_STATUS_PAYMENT_FAILED = 6; ORDER_STATUS_EXPIRED = 7; ORDER_STATUS_REFUND_PENDING = 8; ORDER_STATUS_REFUNDED = 9; }
+enum FlashSaleStatus { FLASH_SALE_STATUS_UNSPECIFIED = 0; FLASH_SALE_STATUS_QUEUED = 1; FLASH_SALE_STATUS_ORDER_CREATED = 2; FLASH_SALE_STATUS_REJECTED = 3; FLASH_SALE_STATUS_EXPIRED = 4; }
+message CreditProductOrderLine { string product_version_id = 1; int32 quantity = 2; bool final_sale = 3; }
+message RoomReservationOrderLine { string room_reservation_id = 1; }
+message OrderLine { string id = 1; string description = 2; dancehub.common.v1.Money unit_price = 3; oneof line { CreditProductOrderLine credit_product = 4; RoomReservationOrderLine room_reservation = 5; } }
+message Order { string id = 1; string user_id = 2; string studio_id = 3; OrderStatus status = 4; dancehub.common.v1.Money total = 5; google.protobuf.Timestamp payment_expires_at = 6; repeated OrderLine lines = 7; string refund_phase = 8; string refund_failure_reason = 9; }
+message FlashSaleRequest { string request_id = 1; string campaign_id = 2; FlashSaleStatus status = 3; string order_id = 4; }
+message OrderItemInput { string product_version_id = 1; int32 quantity = 2; }
+message CreateOrderFromCartRequest { dancehub.common.v1.AuditContext audit = 1; repeated OrderItemInput items = 2; }
+message CreateRoomOrderRequest { string room_reservation_id = 1; dancehub.common.v1.AuditContext audit = 2; }
+message GetOrderRequest { string id = 1; }
+message RequestRefundRequest { string id = 1; dancehub.common.v1.AuditContext audit = 2; }
+message ApproveRefundRequest { string id = 1; dancehub.common.v1.AuditContext audit = 2; }
+message RejectRefundRequest { string id = 1; dancehub.common.v1.AuditContext audit = 2; }
+message CancelRoomReservationRequest { string room_reservation_id = 1; dancehub.common.v1.AuditContext audit = 2; }
+message ReserveFlashSalePurchaseRequest { string campaign_id = 1; string product_version_id = 2; dancehub.common.v1.AuditContext audit = 3; }
+message GetFlashSaleRequestRequest { string request_id = 1; }
+message MarkPaymentSucceededRequest { string order_id = 1; string payment_id = 2; dancehub.common.v1.AuditContext audit = 3; google.protobuf.Timestamp paid_at = 4; }
+message MarkPaymentFailedRequest { string order_id = 1; string reason = 2; dancehub.common.v1.AuditContext audit = 3; }

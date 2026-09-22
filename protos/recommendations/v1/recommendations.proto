@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package dancehub.recommendations.v1;
+
+option go_package = "github.com/JayceeWU/microservices-demo/dancehub/gen/recommendations/v1;recommendationsv1";
+
+import "google/api/annotations.proto";
+
+service RecommendationService {
+  rpc GetStudioAnalytics(GetStudioAnalyticsRequest) returns (GetStudioAnalyticsResponse) { option (google.api.http) = { get: "/v1/analytics" }; }
+}
+message GetStudioAnalyticsRequest { string studio_id = 1; string month = 2; }
+message Metric { string name = 1; double value = 2; }
+message GetStudioAnalyticsResponse { repeated Metric metrics = 1; }

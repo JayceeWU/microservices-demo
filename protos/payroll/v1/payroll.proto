@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package dancehub.payroll.v1;
+
+option go_package = "github.com/JayceeWU/microservices-demo/dancehub/gen/payroll/v1;payrollv1";
+
+import "common/v1/common.proto";
+import "google/api/annotations.proto";
+
+service PayrollService { rpc GetMonthlyPayroll(GetMonthlyPayrollRequest) returns (GetMonthlyPayrollResponse) { option (google.api.http) = { get: "/v1/payroll/monthly" }; } }
+message PayrollLine { string class_session_id = 1; string teacher_id = 2; int32 approved_duration_minutes = 3; int32 redemption_count = 4; int64 base_amount_cents = 5; int64 attendance_amount_cents = 6; int64 total_amount_cents = 7; }
+message GetMonthlyPayrollRequest { string studio_id = 1; string teacher_id = 2; string month = 3; dancehub.common.v1.PageRequest page = 4; }
+message GetMonthlyPayrollResponse { repeated PayrollLine lines = 1; int64 total_amount_cents = 2; dancehub.common.v1.PageResponse page = 3; }

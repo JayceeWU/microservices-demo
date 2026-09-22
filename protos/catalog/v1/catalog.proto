@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package dancehub.catalog.v1;
+
+option go_package = "github.com/JayceeWU/microservices-demo/dancehub/gen/catalog/v1;catalogv1";
+
+import "common/v1/common.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+service CatalogService {
+  rpc SearchStudios(SearchStudiosRequest) returns (SearchStudiosResponse) { option (google.api.http) = { get: "/v1/studios" }; }
+  rpc GetStudio(GetStudioRequest) returns (Studio) { option (google.api.http) = { get: "/v1/studios/{id}" }; }
+  rpc BatchGetStudios(BatchGetStudiosRequest) returns (BatchGetStudiosResponse);
+  rpc ListRooms(ListRoomsRequest) returns (ListRoomsResponse) { option (google.api.http) = { get: "/v1/studios/{studio_id}/rooms" }; }
+  rpc GetRoom(GetRoomRequest) returns (Room);
+  rpc SearchCreditProducts(SearchCreditProductsRequest) returns (SearchCreditProductsResponse) { option (google.api.http) = { get: "/v1/credit-products" }; }
+  rpc GetCreditProductVersion(GetCreditProductVersionRequest) returns (CreditProductVersion) { option (google.api.http) = { get: "/v1/credit-products/{id}" }; }
+  rpc GetProductSnapshot(GetProductSnapshotRequest) returns (ProductSnapshot);
+  rpc GetCampaign(GetCampaignRequest) returns (CampaignSnapshot);
+}
+
+enum IssuerScope { ISSUER_SCOPE_UNSPECIFIED = 0; ISSUER_SCOPE_STUDIO = 1; ISSUER_SCOPE_PLATFORM = 2; }
+enum ProductKind { PRODUCT_KIND_UNSPECIFIED = 0; PRODUCT_KIND_CREDITS = 1; PRODUCT_KIND_UNLIMITED = 2; }
+message Studio { string id = 1; string slug = 2; string name = 3; string description = 4; string address_line = 5; string city = 6; string state = 7; string postal_code = 8; string timezone = 9; string image_url = 10; }
+message Room { string id = 1; string studio_id = 2; string name = 3; int32 capacity = 4; int64 rental_rate_cents_per_hour = 5; repeated string facilities = 6; string image_url = 7; }
+message CreditProductVersion { string id = 1; string product_id = 2; string studio_id = 3; IssuerScope issuer_scope = 4; ProductKind kind = 5; string name = 6; int64 amount_cents = 7; int32 credit_amount = 8; int32 validity_days = 9; bool final_sale = 10; }
+message ProductSnapshot { CreditProductVersion version = 1; string currency = 2; }
+message CampaignSnapshot { string id = 1; string studio_id = 2; string product_version_id = 3; int32 inventory = 4; int32 per_user_limit = 5; int32 payment_ttl_minutes = 6; string name = 7; google.protobuf.Timestamp starts_at = 8; google.protobuf.Timestamp ends_at = 9; bool active = 10; }
+message SearchStudiosRequest { string query = 1; dancehub.common.v1.PageRequest page = 2; }
+message SearchStudiosResponse { repeated Studio studios = 1; dancehub.common.v1.PageResponse page = 2; }
+message GetStudioRequest { string id = 1; }
+message BatchGetStudiosRequest { repeated string ids = 1; }
+message BatchGetStudiosResponse { repeated Studio studios = 1; }
+message ListRoomsRequest { string studio_id = 1; dancehub.common.v1.PageRequest page = 2; }
+message ListRoomsResponse { repeated Room rooms = 1; dancehub.common.v1.PageResponse page = 2; }
+message GetRoomRequest { string id = 1; string studio_id = 2; }
+message SearchCreditProductsRequest { string studio_id = 1; bool include_platform = 2; dancehub.common.v1.PageRequest page = 3; }
+message SearchCreditProductsResponse { repeated CreditProductVersion products = 1; dancehub.common.v1.PageResponse page = 2; }
+message GetCreditProductVersionRequest { string id = 1; }
+message GetProductSnapshotRequest { string product_version_id = 1; }
+message GetCampaignRequest { string id = 1; }

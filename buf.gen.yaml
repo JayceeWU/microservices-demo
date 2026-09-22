@@ -1,0 +1,62 @@
+version: v2
+# `clean` is intentionally left off: gen/openapi also holds the OpenAPI 3 document
+# produced by `npm run generate:openapi3`, which `clean: true` would delete.
+# Remote plugins are pinned so `buf generate && git diff --exit-code` in CI only changes
+# when this file changes, not when the BSR publishes a newer plugin build.
+inputs:
+  - directory: .
+    # The Payment service loads the canonical gRPC health proto at runtime; every other
+    # language uses its gRPC library's health package, so nothing is generated from it.
+    exclude_paths:
+      - protos/grpc/health/v1/health.proto
+plugins:
+  - remote: buf.build/protocolbuffers/go:v1.36.12
+    out: src/dancehub/gen
+    opt:
+      - paths=source_relative
+  - remote: buf.build/grpc/go:v1.6.2
+    out: src/dancehub/gen
+    opt:
+      - paths=source_relative
+  - remote: buf.build/grpc-ecosystem/gateway:v2.30.0
+    out: src/dancehub/gen
+    opt:
+      - paths=source_relative
+  - remote: buf.build/grpc-ecosystem/openapiv2:v2.30.0
+    out: gen/openapi
+    opt:
+      - allow_merge=true
+      - merge_file_name=dancehub-v1
+      - use_go_templates=true
+  - remote: buf.build/protocolbuffers/csharp:v36.1
+    out: src/creditservice/Generated
+    types:
+      - dancehub.credits.v1.CreditService
+  - remote: buf.build/grpc/csharp:v1.84.0
+    out: src/creditservice/Generated
+    types:
+      - dancehub.credits.v1.CreditService
+  - remote: buf.build/protocolbuffers/csharp:v36.1
+    out: src/cartservice/src/Generated
+    types:
+      - dancehub.cart.v1.CartService
+  - remote: buf.build/grpc/csharp:v1.84.0
+    out: src/cartservice/src/Generated
+    types:
+      - dancehub.cart.v1.CartService
+  - remote: buf.build/protocolbuffers/python:v36.1
+    out: src/eventrelay/gen
+    types:
+      - dancehub.orders.v1.OrderService
+  - remote: buf.build/grpc/python:v1.84.0
+    out: src/eventrelay/gen
+    types:
+      - dancehub.orders.v1.OrderService
+  - remote: buf.build/protocolbuffers/python:v36.1
+    out: src/recommendationservice/gen
+    types:
+      - dancehub.recommendations.v1.RecommendationService
+  - remote: buf.build/grpc/python:v1.84.0
+    out: src/recommendationservice/gen
+    types:
+      - dancehub.recommendations.v1.RecommendationService

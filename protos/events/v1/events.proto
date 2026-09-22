@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package dancehub.events.v1;
+
+option go_package = "github.com/JayceeWU/microservices-demo/dancehub/gen/events/v1;eventsv1";
+
+import "google/protobuf/any.proto";
+import "google/protobuf/timestamp.proto";
+
+message EventEnvelope {
+  string event_id = 1;
+  string event_type = 2;
+  int32 schema_version = 3;
+  google.protobuf.Timestamp occurred_at = 4;
+  string producer = 5;
+  string tenant_id = 6;
+  string aggregate_type = 7;
+  string aggregate_id = 8;
+  string traceparent = 9;
+  google.protobuf.Any data = 10;
+}

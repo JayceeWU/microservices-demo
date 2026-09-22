@@ -1,0 +1,5227 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "common/v1/common.proto",
+        "version": "version not set"
+    },
+    "tags": [
+        {
+            "name": "AccountService"
+        },
+        {
+            "name": "CartService"
+        },
+        {
+            "name": "CatalogService"
+        },
+        {
+            "name": "ChatService"
+        },
+        {
+            "name": "CreditService"
+        },
+        {
+            "name": "OrderService"
+        },
+        {
+            "name": "PaymentService"
+        },
+        {
+            "name": "PayrollService"
+        },
+        {
+            "name": "RecommendationService"
+        },
+        {
+            "name": "SchedulingService"
+        }
+    ],
+    "paths": {
+        "/v1/analytics": {
+            "get": {
+                "operationId": "RecommendationService_GetStudioAnalytics",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1GetStudioAnalyticsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "studioId",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "RecommendationService"
+                ]
+            }
+        },
+        "/v1/bookings": {
+            "get": {
+                "operationId": "SchedulingService_ListMyBookings",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1ListMyBookingsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "page.pageSize",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "page.pageToken",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "SchedulingService"
+                ]
+            },
+            "post": {
+                "operationId": "SchedulingService_BookClass",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1Booking"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/v1BookClassRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "SchedulingService"
+                ]
+            }
+        },
+        "/v1/bookings/{bookingId}:cancel": {
+            "post": {
+                "operationId": "SchedulingService_CancelBooking",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1Booking"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "bookingId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SchedulingServiceCancelBookingBody"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "SchedulingService"
+                ]
+            }
+        },
+        "/v1/cart": {
+            "get": {
+                "operationId": "CartService_GetCart",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1Cart"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "CartService"
+                ]
+            },
+            "delete": {
+                "operationId": "CartService_EmptyCart",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1Cart"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "audit.idempotencyKey",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "audit.reason",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "CartService"
+                ]
+            }
+        },
+        "/v1/cart/items": {
+            "post": {
+                "operationId": "CartService_AddItem",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1Cart"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/v1AddItemRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "CartService"
+                ]
+            }
+        },
+        "/v1/cart/items/{productVersionId}": {
+            "delete": {
+                "operationId": "CartService_RemoveItem",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1Cart"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "productVersionId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "audit.idempotencyKey",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "audit.reason",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "CartService"
+                ]
+            }
+        },
+        "/v1/chat/attachments/{attachmentId}:download": {
+            "get": {
+                "operationId": "ChatService_GetAttachmentDownload",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1AttachmentDownload"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "attachmentId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "ChatService"
+                ]
+            }
+        },
+        "/v1/chat/attachments:complete": {
+            "post": {
+                "operationId": "ChatService_CompleteAttachment",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1Attachment"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/v1CompleteAttachmentRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "ChatService"
+                ]
+            }
+        },
+        "/v1/chat/attachments:prepare": {
+            "post": {
+                "operationId": "ChatService_PrepareAttachment",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1AttachmentUpload"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/v1PrepareAttachmentRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "ChatService"
+                ]
+            }
+        },
+        "/v1/chat/blocks": {
+            "post": {
+                "operationId": "ChatService_BlockUser",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1BlockRelation"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/v1BlockUserRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "ChatService"
+                ]
+            }
+        },
+        "/v1/chat/blocks/{blockedUserId}": {
+            "delete": {
+                "operationId": "ChatService_UnblockUser",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1BlockRelation"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "blockedUserId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "audit.idempotencyKey",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "audit.reason",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "ChatService"
+                ]
+            }
+        },
+        "/v1/chat/conversations": {
+            "get": {
+                "operationId": "ChatService_ListConversations",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1ListConversationsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "page.pageSize",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "page.pageToken",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "ChatService"
+                ]
+            }
+        },
+        "/v1/chat/conversations/{conversationId}/messages": {
+            "get": {
+                "operationId": "ChatService_ListMessages",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1ListMessagesResponse"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "conversationId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "beforeSequence",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "page.pageSize",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "page.pageToken",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "ChatService"
+                ]
+            }
+        },
+        "/v1/chat/direct-conversations": {
+            "post": {
+                "operationId": "ChatService_CreateDirectConversation",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1Conversation"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/v1CreateDirectConversationRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "ChatService"
+                ]
+            }
+        },
+        "/v1/chat/groups": {
+            "get": {
+                "operationId": "ChatService_ListGroups",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1ListGroupsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "studioId",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "teacherId",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page.pageSize",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "page.pageToken",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "ChatService"
+                ]
+            },
+            "post": {
+                "operationId": "ChatService_CreateGroup",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1Conversation"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/v1CreateGroupRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "ChatService"
+                ]
+            }
+        },
+        "/v1/chat/groups/{conversationId}/members/{userId}": {
+            "put": {
+                "operationId": "ChatService_PutGroupMember",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1Participant"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "conversationId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChatServicePutGroupMemberBody"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "ChatService"
+                ]
+            }
+        },
+        "/v1/chat/groups/{conversationId}/members/{userId}:ban": {
+            "post": {
+                "operationId": "ChatService_BanGroupMember",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1Participant"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "conversationId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChatServiceBanGroupMemberBody"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "ChatService"
+                ]
+            }
+        },
+        "/v1/chat/groups/{conversationId}/members/{userId}:unban": {
+            "post": {
+                "operationId": "ChatService_UnbanGroupMember",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1Participant"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "conversationId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "userId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChatServiceUnbanGroupMemberBody"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "ChatService"
+                ]
+            }
+        },
+        "/v1/chat/groups/{conversationId}:delete": {
+            "post": {
+                "operationId": "ChatService_DeleteGroup",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {}
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "conversationId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChatServiceDeleteGroupBody"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "ChatService"
+                ]
+            }
+        },
+        "/v1/chat/groups/{conversationId}:join": {
+            "post": {
+                "operationId": "ChatService_JoinGroup",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1Conversation"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "conversationId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChatServiceJoinGroupBody"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "ChatService"
+                ]
+            }
+        },
+        "/v1/chat/groups/{conversationId}:leave": {
+            "post": {
+                "operationId": "ChatService_LeaveGroup",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1Conversation"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "conversationId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChatServiceLeaveGroupBody"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "ChatService"
+                ]
+            }
+        },
+        "/v1/chat/messages/{messageId}:report": {
+            "post": {
+                "operationId": "ChatService_ReportMessage",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1MessageReport"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "messageId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChatServiceReportMessageBody"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "ChatService"
+                ]
+            }
+        },
+        "/v1/chat/studio-conversations": {
+            "post": {
+                "operationId": "ChatService_CreateStudioConversation",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1Conversation"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/v1CreateStudioConversationRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "ChatService"
+                ]
+            }
+        },
+        "/v1/chat/ws-ticket": {
+            "post": {
+                "operationId": "ChatService_CreateWebSocketTicket",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1WebSocketTicket"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/v1CreateWebSocketTicketRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "ChatService"
+                ]
+            }
+        },
+        "/v1/class-sessions": {
+            "get": {
+                "operationId": "SchedulingService_SearchClassSessions",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1SearchClassSessionsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "studioId",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "teacherId",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page.pageSize",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "page.pageToken",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "bookableOnly",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "tags": [
+                    "SchedulingService"
+                ]
+            }
+        },
+        "/v1/class-sessions/{classSessionId}/cancel": {
+            "post": {
+                "operationId": "SchedulingService_CancelClassByStudio",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1ClassSession"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "classSessionId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SchedulingServiceCancelClassByStudioBody"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "SchedulingService"
+                ]
+            }
+        },
+        "/v1/class-sessions/{classSessionId}/complete": {
+            "post": {
+                "operationId": "SchedulingService_ConfirmClassCompleted",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1ClassSession"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "classSessionId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SchedulingServiceConfirmClassCompletedBody"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "SchedulingService"
+                ]
+            }
+        },
+        "/v1/class-sessions/{classSessionId}/roster": {
+            "get": {
+                "operationId": "SchedulingService_GetRoster",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1GetRosterResponse"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "classSessionId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page.pageSize",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "page.pageToken",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "SchedulingService"
+                ]
+            }
+        },
+        "/v1/class-sessions/{classSessionId}/video": {
+            "patch": {
+                "operationId": "SchedulingService_UpdateClassVideo",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1ClassSession"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "classSessionId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SchedulingServiceUpdateClassVideoBody"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "SchedulingService"
+                ]
+            }
+        },
+        "/v1/class-sessions/{classSessionId}/walk-ins": {
+            "post": {
+                "operationId": "SchedulingService_AddWalkInRedemption",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1Booking"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "classSessionId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SchedulingServiceAddWalkInRedemptionBody"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "SchedulingService"
+                ]
+            }
+        },
+        "/v1/class-sessions/{id}": {
+            "get": {
+                "operationId": "SchedulingService_GetClassSession",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1ClassSession"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "SchedulingService"
+                ]
+            }
+        },
+        "/v1/credit-products": {
+            "get": {
+                "operationId": "CatalogService_SearchCreditProducts",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1SearchCreditProductsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "studioId",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "includePlatform",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "page.pageSize",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "page.pageToken",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "CatalogService"
+                ]
+            }
+        },
+        "/v1/credit-products/{id}": {
+            "get": {
+                "operationId": "CatalogService_GetCreditProductVersion",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1CreditProductVersion"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "CatalogService"
+                ]
+            }
+        },
+        "/v1/credits/balances": {
+            "get": {
+                "operationId": "CreditService_GetBalances",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1GetBalancesResponse"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "CreditService"
+                ]
+            }
+        },
+        "/v1/credits/grants": {
+            "get": {
+                "operationId": "CreditService_ListGrants",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1ListGrantsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "page.pageSize",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "page.pageToken",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "CreditService"
+                ]
+            }
+        },
+        "/v1/credits/grants/{grantId}/pause": {
+            "post": {
+                "operationId": "CreditService_PauseGrant",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1GrantOperationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "grantId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreditServicePauseGrantBody"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "CreditService"
+                ]
+            }
+        },
+        "/v1/credits/grants/{grantId}/resume": {
+            "post": {
+                "operationId": "CreditService_ResumeGrant",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1GrantOperationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "grantId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreditServiceResumeGrantBody"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "CreditService"
+                ]
+            }
+        },
+        "/v1/credits/grants/{grantId}/transfer": {
+            "post": {
+                "operationId": "CreditService_TransferGrant",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1GrantOperationResponse"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "grantId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreditServiceTransferGrantBody"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "CreditService"
+                ]
+            }
+        },
+        "/v1/credits/ledger": {
+            "get": {
+                "operationId": "CreditService_ListLedger",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1ListLedgerResponse"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "page.pageSize",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "page.pageToken",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "CreditService"
+                ]
+            }
+        },
+        "/v1/flash-sale-requests/{requestId}": {
+            "get": {
+                "operationId": "OrderService_GetFlashSaleRequest",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1FlashSaleRequest"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "requestId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "OrderService"
+                ]
+            }
+        },
+        "/v1/flash-sales/{campaignId}/reservations": {
+            "post": {
+                "operationId": "OrderService_ReserveFlashSalePurchase",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1FlashSaleRequest"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "campaignId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OrderServiceReserveFlashSalePurchaseBody"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "OrderService"
+                ]
+            }
+        },
+        "/v1/me": {
+            "get": {
+                "operationId": "AccountService_GetMyProfile",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1Profile"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "AccountService"
+                ]
+            },
+            "patch": {
+                "operationId": "AccountService_UpdateMyProfile",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1Profile"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/v1UpdateMyProfileRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "AccountService"
+                ]
+            }
+        },
+        "/v1/me/memberships": {
+            "get": {
+                "operationId": "AccountService_ListStudioMemberships",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1ListStudioMembershipsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "AccountService"
+                ]
+            }
+        },
+        "/v1/orders": {
+            "post": {
+                "operationId": "OrderService_CreateOrderFromCart",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1Order"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/v1CreateOrderFromCartRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "OrderService"
+                ]
+            }
+        },
+        "/v1/orders/{id}": {
+            "get": {
+                "operationId": "OrderService_GetOrder",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1Order"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "OrderService"
+                ]
+            }
+        },
+        "/v1/orders/{id}/refund": {
+            "post": {
+                "operationId": "OrderService_RequestRefund",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1Order"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OrderServiceRequestRefundBody"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "OrderService"
+                ]
+            }
+        },
+        "/v1/orders/{id}/refund/approve": {
+            "post": {
+                "operationId": "OrderService_ApproveRefund",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1Order"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OrderServiceApproveRefundBody"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "OrderService"
+                ]
+            }
+        },
+        "/v1/orders/{id}/refund/reject": {
+            "post": {
+                "operationId": "OrderService_RejectRefund",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1Order"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OrderServiceRejectRefundBody"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "OrderService"
+                ]
+            }
+        },
+        "/v1/orders/{orderId}/payment": {
+            "get": {
+                "operationId": "PaymentService_GetPaymentByOrder",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1Payment"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "orderId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "PaymentService"
+                ]
+            }
+        },
+        "/v1/payments": {
+            "post": {
+                "operationId": "PaymentService_CreatePayment",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1Payment"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/v1CreatePaymentRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "PaymentService"
+                ]
+            }
+        },
+        "/v1/payments/{id}": {
+            "get": {
+                "operationId": "PaymentService_GetPayment",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1Payment"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "PaymentService"
+                ]
+            }
+        },
+        "/v1/payments/{id}/simulate": {
+            "post": {
+                "operationId": "PaymentService_SimulatePayment",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1Payment"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PaymentServiceSimulatePaymentBody"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "PaymentService"
+                ]
+            }
+        },
+        "/v1/payroll/monthly": {
+            "get": {
+                "operationId": "PayrollService_GetMonthlyPayroll",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1GetMonthlyPayrollResponse"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "studioId",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "teacherId",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page.pageSize",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "page.pageToken",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "PayrollService"
+                ]
+            }
+        },
+        "/v1/platform/global-role-assignments": {
+            "get": {
+                "operationId": "AccountService_ListGlobalRoleAssignments",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1ListGlobalRoleAssignmentsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "page.pageSize",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "page.pageToken",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "AccountService"
+                ]
+            },
+            "post": {
+                "operationId": "AccountService_GrantGlobalRole",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1GlobalRoleAssignment"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/v1GrantGlobalRoleRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "AccountService"
+                ]
+            }
+        },
+        "/v1/platform/global-role-assignments/{assignmentId}:revoke": {
+            "post": {
+                "operationId": "AccountService_RevokeGlobalRole",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1GlobalRoleAssignment"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "assignmentId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AccountServiceRevokeGlobalRoleBody"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "AccountService"
+                ]
+            }
+        },
+        "/v1/platform/users:lookup": {
+            "get": {
+                "operationId": "AccountService_LookupUserByEmail",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1LookupUserByEmailResponse"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "email",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "AccountService"
+                ]
+            }
+        },
+        "/v1/room-orders": {
+            "post": {
+                "operationId": "OrderService_CreateRoomOrder",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1Order"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/v1CreateRoomOrderRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "OrderService"
+                ]
+            }
+        },
+        "/v1/room-reservations": {
+            "post": {
+                "operationId": "SchedulingService_CreateRoomHold",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1RoomReservation"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/v1CreateRoomHoldRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "SchedulingService"
+                ]
+            }
+        },
+        "/v1/room-reservations/{roomReservationId}/cancel": {
+            "post": {
+                "operationId": "OrderService_CancelRoomReservation",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1Order"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "roomReservationId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/OrderServiceCancelRoomReservationBody"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "OrderService"
+                ]
+            }
+        },
+        "/v1/studios": {
+            "get": {
+                "operationId": "CatalogService_SearchStudios",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1SearchStudiosResponse"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "query",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page.pageSize",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "page.pageToken",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "CatalogService"
+                ]
+            }
+        },
+        "/v1/studios/{id}": {
+            "get": {
+                "operationId": "CatalogService_GetStudio",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1Studio"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "CatalogService"
+                ]
+            }
+        },
+        "/v1/studios/{studioId}/rooms": {
+            "get": {
+                "operationId": "CatalogService_ListRooms",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1ListRoomsResponse"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "studioId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page.pageSize",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "page.pageToken",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "CatalogService"
+                ]
+            }
+        },
+        "/v1/studios/{studioId}/teachers:invite": {
+            "post": {
+                "operationId": "AccountService_InviteTeacher",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1Invitation"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "studioId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AccountServiceInviteTeacherBody"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "AccountService"
+                ]
+            }
+        },
+        "/v1/teachers": {
+            "get": {
+                "operationId": "AccountService_SearchTeachers",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1SearchTeachersResponse"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "studioId",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "query",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "page.pageSize",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "page.pageToken",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "AccountService"
+                ]
+            }
+        },
+        "/v1/teachers/invitations": {
+            "post": {
+                "operationId": "AccountService_InviteTeacher2",
+                "responses": {
+                    "200": {
+                        "description": "A successful response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/v1Invitation"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "An unexpected error response.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/rpcStatus"
+                                }
+                            }
+                        }
+                    }
+                },
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/v1InviteTeacherRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "tags": [
+                    "AccountService"
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "AccountServiceInviteTeacherBody": {
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "string"
+                    },
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "AccountServiceRevokeGlobalRoleBody": {
+                "type": "object",
+                "properties": {
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "ChatServiceBanGroupMemberBody": {
+                "type": "object",
+                "properties": {
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "ChatServiceDeleteGroupBody": {
+                "type": "object",
+                "properties": {
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "ChatServiceJoinGroupBody": {
+                "type": "object",
+                "properties": {
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "ChatServiceLeaveGroupBody": {
+                "type": "object",
+                "properties": {
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "ChatServicePutGroupMemberBody": {
+                "type": "object",
+                "properties": {
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "ChatServiceReportMessageBody": {
+                "type": "object",
+                "properties": {
+                    "reason": {
+                        "type": "string"
+                    },
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "ChatServiceUnbanGroupMemberBody": {
+                "type": "object",
+                "properties": {
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "CreditServicePauseGrantBody": {
+                "type": "object",
+                "properties": {
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "CreditServiceResumeGrantBody": {
+                "type": "object",
+                "properties": {
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "CreditServiceTransferGrantBody": {
+                "type": "object",
+                "properties": {
+                    "targetUserId": {
+                        "type": "string"
+                    },
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "OrderServiceApproveRefundBody": {
+                "type": "object",
+                "properties": {
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "OrderServiceCancelRoomReservationBody": {
+                "type": "object",
+                "properties": {
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "OrderServiceRejectRefundBody": {
+                "type": "object",
+                "properties": {
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "OrderServiceRequestRefundBody": {
+                "type": "object",
+                "properties": {
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "OrderServiceReserveFlashSalePurchaseBody": {
+                "type": "object",
+                "properties": {
+                    "productVersionId": {
+                        "type": "string"
+                    },
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "PaymentServiceSimulatePaymentBody": {
+                "type": "object",
+                "properties": {
+                    "outcome": {
+                        "type": "string"
+                    },
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "SchedulingServiceAddWalkInRedemptionBody": {
+                "type": "object",
+                "properties": {
+                    "studentId": {
+                        "type": "string"
+                    },
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "SchedulingServiceCancelBookingBody": {
+                "type": "object",
+                "properties": {
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "SchedulingServiceCancelClassByStudioBody": {
+                "type": "object",
+                "properties": {
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "SchedulingServiceConfirmClassCompletedBody": {
+                "type": "object",
+                "properties": {
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "SchedulingServiceUpdateClassVideoBody": {
+                "type": "object",
+                "properties": {
+                    "videoUrl": {
+                        "type": "string"
+                    },
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "dancehubCatalogV1IssuerScope": {
+                "type": "string",
+                "enum": [
+                    "ISSUER_SCOPE_UNSPECIFIED",
+                    "ISSUER_SCOPE_STUDIO",
+                    "ISSUER_SCOPE_PLATFORM"
+                ],
+                "default": "ISSUER_SCOPE_UNSPECIFIED"
+            },
+            "protobufAny": {
+                "type": "object",
+                "properties": {
+                    "@type": {
+                        "type": "string",
+                        "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com. As of May 2023, there are no widely used type server\nimplementations and no plans to implement one.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics."
+                    }
+                },
+                "additionalProperties": {},
+                "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(&foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n    // or ...\n    if (any.isSameTypeAs(Foo.getDefaultInstance())) {\n      foo = any.unpack(Foo.getDefaultInstance());\n    }\n\n Example 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\n Example 4: Pack and unpack a message in Go\n\n     foo := &pb.Foo{...}\n     any, err := anypb.New(foo)\n     if err != nil {\n       ...\n     }\n     ...\n     foo := &pb.Foo{}\n     if err := any.UnmarshalTo(foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\nJSON\n====\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": <string>,\n      \"lastName\": <string>\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }"
+            },
+            "rpcStatus": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "details": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/protobufAny"
+                        }
+                    }
+                }
+            },
+            "v1AddItemRequest": {
+                "type": "object",
+                "properties": {
+                    "studioId": {
+                        "type": "string"
+                    },
+                    "issuerScope": {
+                        "type": "string"
+                    },
+                    "item": {
+                        "$ref": "#/components/schemas/v1CartItem"
+                    },
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "v1Attachment": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "conversationId": {
+                        "type": "string"
+                    },
+                    "uploaderId": {
+                        "type": "string"
+                    },
+                    "kind": {
+                        "$ref": "#/components/schemas/v1MessageKind"
+                    },
+                    "mimeType": {
+                        "type": "string"
+                    },
+                    "sizeBytes": {
+                        "type": "string",
+                        "format": "int64"
+                    },
+                    "sha256": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/v1AttachmentStatus"
+                    }
+                }
+            },
+            "v1AttachmentDownload": {
+                "type": "object",
+                "properties": {
+                    "downloadUrl": {
+                        "type": "string"
+                    },
+                    "expiresAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "v1AttachmentStatus": {
+                "type": "string",
+                "enum": [
+                    "ATTACHMENT_STATUS_UNSPECIFIED",
+                    "ATTACHMENT_STATUS_PENDING_UPLOAD",
+                    "ATTACHMENT_STATUS_PENDING_SCAN",
+                    "ATTACHMENT_STATUS_CLEAN",
+                    "ATTACHMENT_STATUS_REJECTED"
+                ],
+                "default": "ATTACHMENT_STATUS_UNSPECIFIED"
+            },
+            "v1AttachmentUpload": {
+                "type": "object",
+                "properties": {
+                    "attachment": {
+                        "$ref": "#/components/schemas/v1Attachment"
+                    },
+                    "uploadUrl": {
+                        "type": "string"
+                    },
+                    "expiresAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "v1AuditContext": {
+                "type": "object",
+                "properties": {
+                    "idempotencyKey": {
+                        "type": "string"
+                    },
+                    "reason": {
+                        "type": "string"
+                    }
+                }
+            },
+            "v1Balance": {
+                "type": "object",
+                "properties": {
+                    "studioId": {
+                        "type": "string"
+                    },
+                    "available": {
+                        "$ref": "#/components/schemas/v1CreditAmount"
+                    },
+                    "unlimitedActive": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "v1BlockRelation": {
+                "type": "object",
+                "properties": {
+                    "blockerUserId": {
+                        "type": "string"
+                    },
+                    "blockedUserId": {
+                        "type": "string"
+                    },
+                    "active": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "v1BlockUserRequest": {
+                "type": "object",
+                "properties": {
+                    "blockedUserId": {
+                        "type": "string"
+                    },
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "v1BookClassRequest": {
+                "type": "object",
+                "properties": {
+                    "classSessionId": {
+                        "type": "string"
+                    },
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "v1Booking": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "studioId": {
+                        "type": "string"
+                    },
+                    "classSessionId": {
+                        "type": "string"
+                    },
+                    "studentId": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/v1BookingStatus"
+                    },
+                    "isWalkIn": {
+                        "type": "boolean"
+                    },
+                    "creditCompensationPending": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "v1BookingStatus": {
+                "type": "string",
+                "enum": [
+                    "BOOKING_STATUS_UNSPECIFIED",
+                    "BOOKING_STATUS_PENDING_CREDIT",
+                    "BOOKING_STATUS_CONFIRMED",
+                    "BOOKING_STATUS_CHARGED",
+                    "BOOKING_STATUS_ATTENDED",
+                    "BOOKING_STATUS_NO_SHOW",
+                    "BOOKING_STATUS_CANCELLED",
+                    "BOOKING_STATUS_REVERSED"
+                ],
+                "default": "BOOKING_STATUS_UNSPECIFIED"
+            },
+            "v1Cart": {
+                "type": "object",
+                "properties": {
+                    "userId": {
+                        "type": "string"
+                    },
+                    "studioId": {
+                        "type": "string"
+                    },
+                    "issuerScope": {
+                        "type": "string"
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/v1CartItem"
+                        }
+                    }
+                }
+            },
+            "v1CartItem": {
+                "type": "object",
+                "properties": {
+                    "productVersionId": {
+                        "type": "string"
+                    },
+                    "quantity": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "v1ClassSession": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "studioId": {
+                        "type": "string"
+                    },
+                    "roomId": {
+                        "type": "string"
+                    },
+                    "teacherId": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "timeRange": {
+                        "$ref": "#/components/schemas/v1TimeRange"
+                    },
+                    "capacity": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "minimumStudents": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "creditCost": {
+                        "$ref": "#/components/schemas/v1CreditAmount"
+                    },
+                    "confirmedCount": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/v1ClassStatus"
+                    },
+                    "videoUrl": {
+                        "type": "string"
+                    }
+                }
+            },
+            "v1ClassStatus": {
+                "type": "string",
+                "enum": [
+                    "CLASS_STATUS_UNSPECIFIED",
+                    "CLASS_STATUS_PENDING_APPROVAL",
+                    "CLASS_STATUS_APPROVED",
+                    "CLASS_STATUS_OPEN",
+                    "CLASS_STATUS_MINIMUM_CONFIRMED",
+                    "CLASS_STATUS_AWAITING_ADMIN_CONFIRMATION",
+                    "CLASS_STATUS_COMPLETED",
+                    "CLASS_STATUS_CANCELLED"
+                ],
+                "default": "CLASS_STATUS_UNSPECIFIED"
+            },
+            "v1CompleteAttachmentRequest": {
+                "type": "object",
+                "properties": {
+                    "attachmentId": {
+                        "type": "string"
+                    },
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "v1Conversation": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "kind": {
+                        "$ref": "#/components/schemas/v1ConversationKind"
+                    },
+                    "studioId": {
+                        "type": "string"
+                    },
+                    "teacherId": {
+                        "type": "string"
+                    },
+                    "studentId": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "avatarUrl": {
+                        "type": "string"
+                    },
+                    "memberCount": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "lastSequence": {
+                        "type": "string",
+                        "format": "int64"
+                    },
+                    "lastReadSequence": {
+                        "type": "string",
+                        "format": "int64"
+                    },
+                    "joined": {
+                        "type": "boolean"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "v1ConversationKind": {
+                "type": "string",
+                "enum": [
+                    "CONVERSATION_KIND_UNSPECIFIED",
+                    "CONVERSATION_KIND_DIRECT_TEACHER",
+                    "CONVERSATION_KIND_STUDIO_SUPPORT",
+                    "CONVERSATION_KIND_STUDIO_GROUP",
+                    "CONVERSATION_KIND_TEACHER_GROUP"
+                ],
+                "default": "CONVERSATION_KIND_UNSPECIFIED"
+            },
+            "v1CreateDirectConversationRequest": {
+                "type": "object",
+                "properties": {
+                    "recipientUserId": {
+                        "type": "string"
+                    },
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "v1CreateGroupRequest": {
+                "type": "object",
+                "properties": {
+                    "kind": {
+                        "$ref": "#/components/schemas/v1ConversationKind"
+                    },
+                    "studioId": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "avatarUrl": {
+                        "type": "string"
+                    },
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "v1CreateOrderFromCartRequest": {
+                "type": "object",
+                "properties": {
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/v1OrderItemInput"
+                        }
+                    }
+                }
+            },
+            "v1CreatePaymentRequest": {
+                "type": "object",
+                "properties": {
+                    "orderId": {
+                        "type": "string"
+                    },
+                    "amountCents": {
+                        "type": "string",
+                        "format": "int64"
+                    },
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    },
+                    "ownerUserId": {
+                        "type": "string"
+                    },
+                    "paymentExpiresAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "v1CreateRoomHoldRequest": {
+                "type": "object",
+                "properties": {
+                    "studioId": {
+                        "type": "string"
+                    },
+                    "roomId": {
+                        "type": "string"
+                    },
+                    "timeRange": {
+                        "$ref": "#/components/schemas/v1TimeRange"
+                    },
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "v1CreateRoomOrderRequest": {
+                "type": "object",
+                "properties": {
+                    "roomReservationId": {
+                        "type": "string"
+                    },
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "v1CreateStudioConversationRequest": {
+                "type": "object",
+                "properties": {
+                    "studioId": {
+                        "type": "string"
+                    },
+                    "studentId": {
+                        "type": "string"
+                    },
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "v1CreateWebSocketTicketRequest": {
+                "type": "object"
+            },
+            "v1CreditAmount": {
+                "type": "object",
+                "properties": {
+                    "units": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "v1CreditProductOrderLine": {
+                "type": "object",
+                "properties": {
+                    "productVersionId": {
+                        "type": "string"
+                    },
+                    "quantity": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "finalSale": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "v1CreditProductVersion": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "productId": {
+                        "type": "string"
+                    },
+                    "studioId": {
+                        "type": "string"
+                    },
+                    "issuerScope": {
+                        "$ref": "#/components/schemas/dancehubCatalogV1IssuerScope"
+                    },
+                    "kind": {
+                        "$ref": "#/components/schemas/v1ProductKind"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "amountCents": {
+                        "type": "string",
+                        "format": "int64"
+                    },
+                    "creditAmount": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "validityDays": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "finalSale": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "v1FlashSaleRequest": {
+                "type": "object",
+                "properties": {
+                    "requestId": {
+                        "type": "string"
+                    },
+                    "campaignId": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/v1FlashSaleStatus"
+                    },
+                    "orderId": {
+                        "type": "string"
+                    }
+                }
+            },
+            "v1FlashSaleStatus": {
+                "type": "string",
+                "enum": [
+                    "FLASH_SALE_STATUS_UNSPECIFIED",
+                    "FLASH_SALE_STATUS_QUEUED",
+                    "FLASH_SALE_STATUS_ORDER_CREATED",
+                    "FLASH_SALE_STATUS_REJECTED",
+                    "FLASH_SALE_STATUS_EXPIRED"
+                ],
+                "default": "FLASH_SALE_STATUS_UNSPECIFIED"
+            },
+            "v1GetBalancesResponse": {
+                "type": "object",
+                "properties": {
+                    "balances": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/v1Balance"
+                        }
+                    }
+                }
+            },
+            "v1GetMonthlyPayrollResponse": {
+                "type": "object",
+                "properties": {
+                    "lines": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/v1PayrollLine"
+                        }
+                    },
+                    "totalAmountCents": {
+                        "type": "string",
+                        "format": "int64"
+                    },
+                    "page": {
+                        "$ref": "#/components/schemas/v1PageResponse"
+                    }
+                }
+            },
+            "v1GetRosterResponse": {
+                "type": "object",
+                "properties": {
+                    "bookings": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/v1Booking"
+                        }
+                    },
+                    "page": {
+                        "$ref": "#/components/schemas/v1PageResponse"
+                    }
+                }
+            },
+            "v1GetStudioAnalyticsResponse": {
+                "type": "object",
+                "properties": {
+                    "metrics": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/v1Metric"
+                        }
+                    }
+                }
+            },
+            "v1GlobalRole": {
+                "type": "string",
+                "enum": [
+                    "GLOBAL_ROLE_UNSPECIFIED",
+                    "GLOBAL_ROLE_PLATFORM_ADMIN"
+                ],
+                "default": "GLOBAL_ROLE_UNSPECIFIED"
+            },
+            "v1GlobalRoleAssignment": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/v1PlatformUser"
+                    },
+                    "role": {
+                        "$ref": "#/components/schemas/v1GlobalRole"
+                    },
+                    "active": {
+                        "type": "boolean"
+                    },
+                    "grantedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "revokedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "v1Grant": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "userId": {
+                        "type": "string"
+                    },
+                    "studioId": {
+                        "type": "string"
+                    },
+                    "remaining": {
+                        "$ref": "#/components/schemas/v1CreditAmount"
+                    },
+                    "expiresAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "unlimited": {
+                        "type": "boolean"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/v1GrantStatus"
+                    },
+                    "pausedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "remainingValiditySeconds": {
+                        "type": "string",
+                        "format": "int64"
+                    },
+                    "finalSale": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "v1GrantGlobalRoleRequest": {
+                "type": "object",
+                "properties": {
+                    "userId": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "$ref": "#/components/schemas/v1GlobalRole"
+                    },
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "v1GrantOperationResponse": {
+                "type": "object",
+                "properties": {
+                    "operation": {
+                        "type": "string"
+                    },
+                    "grantId": {
+                        "type": "string"
+                    },
+                    "successorGrantId": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "expiresAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "v1GrantStatus": {
+                "type": "string",
+                "enum": [
+                    "GRANT_STATUS_UNSPECIFIED",
+                    "GRANT_STATUS_ACTIVE",
+                    "GRANT_STATUS_PAUSED",
+                    "GRANT_STATUS_TRANSFERRED",
+                    "GRANT_STATUS_REVOKED"
+                ],
+                "default": "GRANT_STATUS_UNSPECIFIED"
+            },
+            "v1Invitation": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "studioId": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "$ref": "#/components/schemas/v1Role"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "expiresAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "v1InviteTeacherRequest": {
+                "type": "object",
+                "properties": {
+                    "studioId": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "v1LedgerEntry": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "studioId": {
+                        "type": "string"
+                    },
+                    "grantId": {
+                        "type": "string"
+                    },
+                    "bookingId": {
+                        "type": "string"
+                    },
+                    "kind": {
+                        "$ref": "#/components/schemas/v1LedgerKind"
+                    },
+                    "creditDelta": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "reason": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "v1LedgerKind": {
+                "type": "string",
+                "enum": [
+                    "LEDGER_KIND_UNSPECIFIED",
+                    "LEDGER_KIND_GRANT",
+                    "LEDGER_KIND_HOLD",
+                    "LEDGER_KIND_RELEASE",
+                    "LEDGER_KIND_CAPTURE",
+                    "LEDGER_KIND_REVERSAL",
+                    "LEDGER_KIND_REFUND",
+                    "LEDGER_KIND_ADJUSTMENT",
+                    "LEDGER_KIND_ENTITLEMENT_USE",
+                    "LEDGER_KIND_TRANSFER_OUT",
+                    "LEDGER_KIND_TRANSFER_IN"
+                ],
+                "default": "LEDGER_KIND_UNSPECIFIED"
+            },
+            "v1ListConversationsResponse": {
+                "type": "object",
+                "properties": {
+                    "conversations": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/v1Conversation"
+                        }
+                    },
+                    "page": {
+                        "$ref": "#/components/schemas/v1PageResponse"
+                    }
+                }
+            },
+            "v1ListGlobalRoleAssignmentsResponse": {
+                "type": "object",
+                "properties": {
+                    "assignments": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/v1GlobalRoleAssignment"
+                        }
+                    },
+                    "page": {
+                        "$ref": "#/components/schemas/v1PageResponse"
+                    }
+                }
+            },
+            "v1ListGrantsResponse": {
+                "type": "object",
+                "properties": {
+                    "grants": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/v1Grant"
+                        }
+                    },
+                    "page": {
+                        "$ref": "#/components/schemas/v1PageResponse"
+                    }
+                }
+            },
+            "v1ListGroupsResponse": {
+                "type": "object",
+                "properties": {
+                    "groups": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/v1Conversation"
+                        }
+                    },
+                    "page": {
+                        "$ref": "#/components/schemas/v1PageResponse"
+                    }
+                }
+            },
+            "v1ListLedgerResponse": {
+                "type": "object",
+                "properties": {
+                    "entries": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/v1LedgerEntry"
+                        }
+                    },
+                    "page": {
+                        "$ref": "#/components/schemas/v1PageResponse"
+                    }
+                }
+            },
+            "v1ListMessagesResponse": {
+                "type": "object",
+                "properties": {
+                    "messages": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/v1Message"
+                        }
+                    },
+                    "page": {
+                        "$ref": "#/components/schemas/v1PageResponse"
+                    }
+                }
+            },
+            "v1ListMyBookingsResponse": {
+                "type": "object",
+                "properties": {
+                    "bookings": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/v1Booking"
+                        }
+                    },
+                    "page": {
+                        "$ref": "#/components/schemas/v1PageResponse"
+                    }
+                }
+            },
+            "v1ListRoomsResponse": {
+                "type": "object",
+                "properties": {
+                    "rooms": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/v1Room"
+                        }
+                    },
+                    "page": {
+                        "$ref": "#/components/schemas/v1PageResponse"
+                    }
+                }
+            },
+            "v1ListStudioMembershipsResponse": {
+                "type": "object",
+                "properties": {
+                    "memberships": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/v1Membership"
+                        }
+                    },
+                    "globalRoles": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/v1GlobalRole"
+                        }
+                    }
+                }
+            },
+            "v1LookupUserByEmailResponse": {
+                "type": "object",
+                "properties": {
+                    "user": {
+                        "$ref": "#/components/schemas/v1PlatformUser"
+                    },
+                    "globalRoles": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/v1GlobalRole"
+                        }
+                    }
+                }
+            },
+            "v1MemberState": {
+                "type": "string",
+                "enum": [
+                    "MEMBER_STATE_UNSPECIFIED",
+                    "MEMBER_STATE_ACTIVE",
+                    "MEMBER_STATE_LEFT",
+                    "MEMBER_STATE_BANNED"
+                ],
+                "default": "MEMBER_STATE_UNSPECIFIED"
+            },
+            "v1Membership": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "studioId": {
+                        "type": "string"
+                    },
+                    "userId": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "$ref": "#/components/schemas/v1Role"
+                    },
+                    "active": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "v1Message": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "conversationId": {
+                        "type": "string"
+                    },
+                    "sequence": {
+                        "type": "string",
+                        "format": "int64"
+                    },
+                    "senderId": {
+                        "type": "string"
+                    },
+                    "kind": {
+                        "$ref": "#/components/schemas/v1MessageKind"
+                    },
+                    "body": {
+                        "type": "string"
+                    },
+                    "replyToMessageId": {
+                        "type": "string"
+                    },
+                    "attachments": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/v1Attachment"
+                        }
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "editedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "withdrawnAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "senderDisplayName": {
+                        "type": "string"
+                    }
+                }
+            },
+            "v1MessageKind": {
+                "type": "string",
+                "enum": [
+                    "MESSAGE_KIND_UNSPECIFIED",
+                    "MESSAGE_KIND_TEXT",
+                    "MESSAGE_KIND_IMAGE",
+                    "MESSAGE_KIND_VIDEO",
+                    "MESSAGE_KIND_SYSTEM"
+                ],
+                "default": "MESSAGE_KIND_UNSPECIFIED"
+            },
+            "v1MessageReport": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "messageId": {
+                        "type": "string"
+                    },
+                    "reporterId": {
+                        "type": "string"
+                    },
+                    "reason": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "v1Metric": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "value": {
+                        "type": "number",
+                        "format": "double"
+                    }
+                }
+            },
+            "v1Money": {
+                "type": "object",
+                "properties": {
+                    "amountCents": {
+                        "type": "string",
+                        "format": "int64"
+                    }
+                },
+                "description": "USD is the only supported currency. The wire value is always integer cents."
+            },
+            "v1Order": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "userId": {
+                        "type": "string"
+                    },
+                    "studioId": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/v1OrderStatus"
+                    },
+                    "total": {
+                        "$ref": "#/components/schemas/v1Money"
+                    },
+                    "paymentExpiresAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "lines": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/v1OrderLine"
+                        }
+                    },
+                    "refundPhase": {
+                        "type": "string"
+                    },
+                    "refundFailureReason": {
+                        "type": "string"
+                    }
+                }
+            },
+            "v1OrderItemInput": {
+                "type": "object",
+                "properties": {
+                    "productVersionId": {
+                        "type": "string"
+                    },
+                    "quantity": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "v1OrderLine": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "unitPrice": {
+                        "$ref": "#/components/schemas/v1Money"
+                    },
+                    "creditProduct": {
+                        "$ref": "#/components/schemas/v1CreditProductOrderLine"
+                    },
+                    "roomReservation": {
+                        "$ref": "#/components/schemas/v1RoomReservationOrderLine"
+                    }
+                }
+            },
+            "v1OrderStatus": {
+                "type": "string",
+                "enum": [
+                    "ORDER_STATUS_UNSPECIFIED",
+                    "ORDER_STATUS_DRAFT",
+                    "ORDER_STATUS_PENDING_PAYMENT",
+                    "ORDER_STATUS_PAID",
+                    "ORDER_STATUS_PAID_NOT_FULFILLED",
+                    "ORDER_STATUS_FULFILLED",
+                    "ORDER_STATUS_PAYMENT_FAILED",
+                    "ORDER_STATUS_EXPIRED",
+                    "ORDER_STATUS_REFUND_PENDING",
+                    "ORDER_STATUS_REFUNDED"
+                ],
+                "default": "ORDER_STATUS_UNSPECIFIED"
+            },
+            "v1PageRequest": {
+                "type": "object",
+                "properties": {
+                    "pageSize": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "pageToken": {
+                        "type": "string"
+                    }
+                }
+            },
+            "v1PageResponse": {
+                "type": "object",
+                "properties": {
+                    "nextPageToken": {
+                        "type": "string"
+                    }
+                }
+            },
+            "v1Participant": {
+                "type": "object",
+                "properties": {
+                    "conversationId": {
+                        "type": "string"
+                    },
+                    "userId": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "$ref": "#/components/schemas/v1ParticipantRole"
+                    },
+                    "state": {
+                        "$ref": "#/components/schemas/v1MemberState"
+                    },
+                    "visibleFromSequence": {
+                        "type": "string",
+                        "format": "int64"
+                    },
+                    "lastReadSequence": {
+                        "type": "string",
+                        "format": "int64"
+                    },
+                    "joinedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "v1ParticipantRole": {
+                "type": "string",
+                "enum": [
+                    "PARTICIPANT_ROLE_UNSPECIFIED",
+                    "PARTICIPANT_ROLE_MEMBER",
+                    "PARTICIPANT_ROLE_OWNER",
+                    "PARTICIPANT_ROLE_MODERATOR"
+                ],
+                "default": "PARTICIPANT_ROLE_UNSPECIFIED"
+            },
+            "v1Payment": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "orderId": {
+                        "type": "string"
+                    },
+                    "providerPaymentId": {
+                        "type": "string"
+                    },
+                    "amountCents": {
+                        "type": "string",
+                        "format": "int64"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "clientSecret": {
+                        "type": "string"
+                    },
+                    "simulationEnabled": {
+                        "type": "boolean"
+                    },
+                    "succeededAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "paymentExpiresAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "v1PayrollLine": {
+                "type": "object",
+                "properties": {
+                    "classSessionId": {
+                        "type": "string"
+                    },
+                    "teacherId": {
+                        "type": "string"
+                    },
+                    "approvedDurationMinutes": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "redemptionCount": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "baseAmountCents": {
+                        "type": "string",
+                        "format": "int64"
+                    },
+                    "attendanceAmountCents": {
+                        "type": "string",
+                        "format": "int64"
+                    },
+                    "totalAmountCents": {
+                        "type": "string",
+                        "format": "int64"
+                    }
+                }
+            },
+            "v1PlatformUser": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "displayName": {
+                        "type": "string"
+                    }
+                }
+            },
+            "v1PrepareAttachmentRequest": {
+                "type": "object",
+                "properties": {
+                    "conversationId": {
+                        "type": "string"
+                    },
+                    "kind": {
+                        "$ref": "#/components/schemas/v1MessageKind"
+                    },
+                    "mimeType": {
+                        "type": "string"
+                    },
+                    "sizeBytes": {
+                        "type": "string",
+                        "format": "int64"
+                    },
+                    "sha256": {
+                        "type": "string"
+                    },
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "v1ProductKind": {
+                "type": "string",
+                "enum": [
+                    "PRODUCT_KIND_UNSPECIFIED",
+                    "PRODUCT_KIND_CREDITS",
+                    "PRODUCT_KIND_UNLIMITED"
+                ],
+                "default": "PRODUCT_KIND_UNSPECIFIED"
+            },
+            "v1Profile": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "displayName": {
+                        "type": "string"
+                    },
+                    "avatarUrl": {
+                        "type": "string"
+                    },
+                    "timezone": {
+                        "type": "string"
+                    },
+                    "bio": {
+                        "type": "string"
+                    },
+                    "portfolioUrl": {
+                        "type": "string"
+                    }
+                }
+            },
+            "v1Role": {
+                "type": "string",
+                "enum": [
+                    "ROLE_UNSPECIFIED",
+                    "ROLE_STUDENT",
+                    "ROLE_TEACHER",
+                    "ROLE_STUDIO_ADMIN"
+                ],
+                "default": "ROLE_UNSPECIFIED"
+            },
+            "v1Room": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "studioId": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "capacity": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "rentalRateCentsPerHour": {
+                        "type": "string",
+                        "format": "int64"
+                    },
+                    "facilities": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "imageUrl": {
+                        "type": "string"
+                    }
+                }
+            },
+            "v1RoomReservation": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "studioId": {
+                        "type": "string"
+                    },
+                    "roomId": {
+                        "type": "string"
+                    },
+                    "studentId": {
+                        "type": "string"
+                    },
+                    "timeRange": {
+                        "$ref": "#/components/schemas/v1TimeRange"
+                    },
+                    "amount": {
+                        "$ref": "#/components/schemas/v1Money"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/v1RoomReservationStatus"
+                    },
+                    "holdExpiresAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "v1RoomReservationOrderLine": {
+                "type": "object",
+                "properties": {
+                    "roomReservationId": {
+                        "type": "string"
+                    }
+                }
+            },
+            "v1RoomReservationStatus": {
+                "type": "string",
+                "enum": [
+                    "ROOM_RESERVATION_STATUS_UNSPECIFIED",
+                    "ROOM_RESERVATION_STATUS_HOLD",
+                    "ROOM_RESERVATION_STATUS_PENDING_PAYMENT",
+                    "ROOM_RESERVATION_STATUS_CONFIRMED",
+                    "ROOM_RESERVATION_STATUS_EXPIRED",
+                    "ROOM_RESERVATION_STATUS_REFUND_PENDING",
+                    "ROOM_RESERVATION_STATUS_REFUNDED",
+                    "ROOM_RESERVATION_STATUS_CANCELLED"
+                ],
+                "default": "ROOM_RESERVATION_STATUS_UNSPECIFIED"
+            },
+            "v1SearchClassSessionsResponse": {
+                "type": "object",
+                "properties": {
+                    "sessions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/v1ClassSession"
+                        }
+                    },
+                    "page": {
+                        "$ref": "#/components/schemas/v1PageResponse"
+                    }
+                }
+            },
+            "v1SearchCreditProductsResponse": {
+                "type": "object",
+                "properties": {
+                    "products": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/v1CreditProductVersion"
+                        }
+                    },
+                    "page": {
+                        "$ref": "#/components/schemas/v1PageResponse"
+                    }
+                }
+            },
+            "v1SearchStudiosResponse": {
+                "type": "object",
+                "properties": {
+                    "studios": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/v1Studio"
+                        }
+                    },
+                    "page": {
+                        "$ref": "#/components/schemas/v1PageResponse"
+                    }
+                }
+            },
+            "v1SearchTeachersResponse": {
+                "type": "object",
+                "properties": {
+                    "teachers": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/v1Teacher"
+                        }
+                    },
+                    "page": {
+                        "$ref": "#/components/schemas/v1PageResponse"
+                    }
+                }
+            },
+            "v1Studio": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "slug": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "addressLine": {
+                        "type": "string"
+                    },
+                    "city": {
+                        "type": "string"
+                    },
+                    "state": {
+                        "type": "string"
+                    },
+                    "postalCode": {
+                        "type": "string"
+                    },
+                    "timezone": {
+                        "type": "string"
+                    },
+                    "imageUrl": {
+                        "type": "string"
+                    }
+                }
+            },
+            "v1Teacher": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "displayName": {
+                        "type": "string"
+                    },
+                    "avatarUrl": {
+                        "type": "string"
+                    },
+                    "bio": {
+                        "type": "string"
+                    },
+                    "portfolioUrl": {
+                        "type": "string"
+                    },
+                    "studioId": {
+                        "type": "string"
+                    }
+                }
+            },
+            "v1TimeRange": {
+                "type": "object",
+                "properties": {
+                    "startsAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "endsAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "v1UpdateMyProfileRequest": {
+                "type": "object",
+                "properties": {
+                    "displayName": {
+                        "type": "string"
+                    },
+                    "avatarUrl": {
+                        "type": "string"
+                    },
+                    "timezone": {
+                        "type": "string"
+                    },
+                    "bio": {
+                        "type": "string"
+                    },
+                    "portfolioUrl": {
+                        "type": "string"
+                    },
+                    "audit": {
+                        "$ref": "#/components/schemas/v1AuditContext"
+                    }
+                }
+            },
+            "v1WebSocketTicket": {
+                "type": "object",
+                "properties": {
+                    "ticket": {
+                        "type": "string"
+                    },
+                    "expiresAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            }
+        }
+    }
+}

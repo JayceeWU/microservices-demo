@@ -1,0 +1,81 @@
+syntax = "proto3";
+
+package dancehub.chat.v1;
+
+option go_package = "github.com/JayceeWU/microservices-demo/dancehub/gen/chat/v1;chatv1";
+
+import "common/v1/common.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+service ChatService {
+  rpc ListConversations(ListConversationsRequest) returns (ListConversationsResponse) { option (google.api.http) = { get: "/v1/chat/conversations" }; }
+  rpc CreateDirectConversation(CreateDirectConversationRequest) returns (Conversation) { option (google.api.http) = { post: "/v1/chat/direct-conversations" body: "*" }; }
+  rpc CreateStudioConversation(CreateStudioConversationRequest) returns (Conversation) { option (google.api.http) = { post: "/v1/chat/studio-conversations" body: "*" }; }
+  rpc ListGroups(ListGroupsRequest) returns (ListGroupsResponse) { option (google.api.http) = { get: "/v1/chat/groups" }; }
+  rpc CreateGroup(CreateGroupRequest) returns (Conversation) { option (google.api.http) = { post: "/v1/chat/groups" body: "*" }; }
+  rpc DeleteGroup(GroupCommandRequest) returns (google.protobuf.Empty) { option (google.api.http) = { post: "/v1/chat/groups/{conversation_id}:delete" body: "*" }; }
+  rpc JoinGroup(GroupCommandRequest) returns (Conversation) { option (google.api.http) = { post: "/v1/chat/groups/{conversation_id}:join" body: "*" }; }
+  rpc LeaveGroup(GroupCommandRequest) returns (Conversation) { option (google.api.http) = { post: "/v1/chat/groups/{conversation_id}:leave" body: "*" }; }
+  rpc PutGroupMember(PutGroupMemberRequest) returns (Participant) { option (google.api.http) = { put: "/v1/chat/groups/{conversation_id}/members/{user_id}" body: "*" }; }
+  rpc BanGroupMember(PutGroupMemberRequest) returns (Participant) { option (google.api.http) = { post: "/v1/chat/groups/{conversation_id}/members/{user_id}:ban" body: "*" }; }
+  rpc UnbanGroupMember(PutGroupMemberRequest) returns (Participant) { option (google.api.http) = { post: "/v1/chat/groups/{conversation_id}/members/{user_id}:unban" body: "*" }; }
+  rpc ListMessages(ListMessagesRequest) returns (ListMessagesResponse) { option (google.api.http) = { get: "/v1/chat/conversations/{conversation_id}/messages" }; }
+  rpc BlockUser(BlockUserRequest) returns (BlockRelation) { option (google.api.http) = { post: "/v1/chat/blocks" body: "*" }; }
+  rpc UnblockUser(BlockUserRequest) returns (BlockRelation) { option (google.api.http) = { delete: "/v1/chat/blocks/{blocked_user_id}" }; }
+  rpc PrepareAttachment(PrepareAttachmentRequest) returns (AttachmentUpload) { option (google.api.http) = { post: "/v1/chat/attachments:prepare" body: "*" }; }
+  rpc CompleteAttachment(CompleteAttachmentRequest) returns (Attachment) { option (google.api.http) = { post: "/v1/chat/attachments:complete" body: "*" }; }
+  rpc GetAttachmentDownload(GetAttachmentDownloadRequest) returns (AttachmentDownload) { option (google.api.http) = { get: "/v1/chat/attachments/{attachment_id}:download" }; }
+  rpc ReportMessage(ReportMessageRequest) returns (MessageReport) { option (google.api.http) = { post: "/v1/chat/messages/{message_id}:report" body: "*" }; }
+  rpc CreateWebSocketTicket(CreateWebSocketTicketRequest) returns (WebSocketTicket) { option (google.api.http) = { post: "/v1/chat/ws-ticket" body: "*" }; }
+  rpc Connect(stream ClientFrame) returns (stream ServerFrame);
+}
+
+enum ConversationKind { CONVERSATION_KIND_UNSPECIFIED = 0; CONVERSATION_KIND_DIRECT_TEACHER = 1; CONVERSATION_KIND_STUDIO_SUPPORT = 2; CONVERSATION_KIND_STUDIO_GROUP = 3; CONVERSATION_KIND_TEACHER_GROUP = 4; }
+enum ParticipantRole { PARTICIPANT_ROLE_UNSPECIFIED = 0; PARTICIPANT_ROLE_MEMBER = 1; PARTICIPANT_ROLE_OWNER = 2; PARTICIPANT_ROLE_MODERATOR = 3; }
+enum MemberState { MEMBER_STATE_UNSPECIFIED = 0; MEMBER_STATE_ACTIVE = 1; MEMBER_STATE_LEFT = 2; MEMBER_STATE_BANNED = 3; }
+enum MessageKind { MESSAGE_KIND_UNSPECIFIED = 0; MESSAGE_KIND_TEXT = 1; MESSAGE_KIND_IMAGE = 2; MESSAGE_KIND_VIDEO = 3; MESSAGE_KIND_SYSTEM = 4; }
+enum AttachmentStatus { ATTACHMENT_STATUS_UNSPECIFIED = 0; ATTACHMENT_STATUS_PENDING_UPLOAD = 1; ATTACHMENT_STATUS_PENDING_SCAN = 2; ATTACHMENT_STATUS_CLEAN = 3; ATTACHMENT_STATUS_REJECTED = 4; }
+
+message Conversation { string id = 1; ConversationKind kind = 2; string studio_id = 3; string teacher_id = 4; string student_id = 5; string title = 6; string description = 7; string avatar_url = 8; int32 member_count = 9; int64 last_sequence = 10; int64 last_read_sequence = 11; bool joined = 12; google.protobuf.Timestamp created_at = 13; }
+message Participant { string conversation_id = 1; string user_id = 2; ParticipantRole role = 3; MemberState state = 4; int64 visible_from_sequence = 5; int64 last_read_sequence = 6; google.protobuf.Timestamp joined_at = 7; }
+message Attachment { string id = 1; string conversation_id = 2; string uploader_id = 3; MessageKind kind = 4; string mime_type = 5; int64 size_bytes = 6; string sha256 = 7; AttachmentStatus status = 8; }
+message Message { string id = 1; string conversation_id = 2; int64 sequence = 3; string sender_id = 4; MessageKind kind = 5; string body = 6; string reply_to_message_id = 7; repeated Attachment attachments = 8; google.protobuf.Timestamp created_at = 9; google.protobuf.Timestamp edited_at = 10; google.protobuf.Timestamp withdrawn_at = 11; string sender_display_name = 12; }
+message BlockRelation { string blocker_user_id = 1; string blocked_user_id = 2; bool active = 3; }
+message MessageReport { string id = 1; string message_id = 2; string reporter_id = 3; string reason = 4; google.protobuf.Timestamp created_at = 5; }
+
+message ListConversationsRequest { dancehub.common.v1.PageRequest page = 1; }
+message ListConversationsResponse { repeated Conversation conversations = 1; dancehub.common.v1.PageResponse page = 2; }
+message CreateDirectConversationRequest { string recipient_user_id = 1; dancehub.common.v1.AuditContext audit = 2; }
+message CreateStudioConversationRequest { string studio_id = 1; string student_id = 2; dancehub.common.v1.AuditContext audit = 3; }
+message ListGroupsRequest { string studio_id = 1; string teacher_id = 2; dancehub.common.v1.PageRequest page = 3; }
+message ListGroupsResponse { repeated Conversation groups = 1; dancehub.common.v1.PageResponse page = 2; }
+message CreateGroupRequest { ConversationKind kind = 1; string studio_id = 2; string title = 3; string description = 4; string avatar_url = 5; dancehub.common.v1.AuditContext audit = 6; }
+message GroupCommandRequest { string conversation_id = 1; dancehub.common.v1.AuditContext audit = 2; }
+message PutGroupMemberRequest { string conversation_id = 1; string user_id = 2; dancehub.common.v1.AuditContext audit = 3; }
+message ListMessagesRequest { string conversation_id = 1; int64 before_sequence = 2; dancehub.common.v1.PageRequest page = 3; }
+message ListMessagesResponse { repeated Message messages = 1; dancehub.common.v1.PageResponse page = 2; }
+message BlockUserRequest { string blocked_user_id = 1; dancehub.common.v1.AuditContext audit = 2; }
+message PrepareAttachmentRequest { string conversation_id = 1; MessageKind kind = 2; string mime_type = 3; int64 size_bytes = 4; string sha256 = 5; dancehub.common.v1.AuditContext audit = 6; }
+message AttachmentUpload { Attachment attachment = 1; string upload_url = 2; google.protobuf.Timestamp expires_at = 3; }
+message CompleteAttachmentRequest { string attachment_id = 1; dancehub.common.v1.AuditContext audit = 2; }
+message GetAttachmentDownloadRequest { string attachment_id = 1; }
+message AttachmentDownload { string download_url = 1; google.protobuf.Timestamp expires_at = 2; }
+message ReportMessageRequest { string message_id = 1; string reason = 2; dancehub.common.v1.AuditContext audit = 3; }
+message CreateWebSocketTicketRequest {}
+message WebSocketTicket { string ticket = 1; google.protobuf.Timestamp expires_at = 2; }
+
+message SendMessageCommand { string conversation_id = 1; string client_message_id = 2; MessageKind kind = 3; string body = 4; string reply_to_message_id = 5; repeated string attachment_ids = 6; }
+message EditMessageCommand { string message_id = 1; string body = 2; }
+message WithdrawMessageCommand { string message_id = 1; }
+message MarkReadCommand { string conversation_id = 1; int64 sequence = 2; }
+message TypingCommand { string conversation_id = 1; bool typing = 2; }
+message ClientFrame { int32 version = 1; string command_id = 2; string ticket = 3; oneof payload { SendMessageCommand send_message = 10; EditMessageCommand edit_message = 11; WithdrawMessageCommand withdraw_message = 12; MarkReadCommand mark_read = 13; TypingCommand typing = 14; bool heartbeat = 15; } }
+message Ack { string command_id = 1; Message message = 2; }
+message ReadUpdated { string conversation_id = 1; string user_id = 2; int64 sequence = 3; }
+message TypingUpdated { string conversation_id = 1; string user_id = 2; bool typing = 3; }
+message PresenceUpdated { string user_id = 1; bool online = 2; }
+message MembershipChanged { Participant participant = 1; }
+message ChatError { string command_id = 1; string code = 2; string message = 3; int64 retry_after_ms = 4; }
+message ServerFrame { int32 version = 1; string event_id = 2; google.protobuf.Timestamp occurred_at = 3; oneof payload { bool ready = 10; Ack ack = 11; Message message_created = 12; Message message_updated = 13; string message_withdrawn_id = 14; ReadUpdated read_updated = 15; TypingUpdated typing = 16; PresenceUpdated presence = 17; MembershipChanged membership_changed = 18; ChatError error = 19; bool reconnect = 20; Attachment attachment_updated = 21; } }

@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+package dancehub.account.v1;
+
+option go_package = "github.com/JayceeWU/microservices-demo/dancehub/gen/account/v1;accountv1";
+
+import "common/v1/common.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+service AccountService {
+  rpc GetMyProfile(GetMyProfileRequest) returns (Profile) { option (google.api.http) = { get: "/v1/me" }; }
+  rpc UpdateMyProfile(UpdateMyProfileRequest) returns (Profile) { option (google.api.http) = { patch: "/v1/me" body: "*" }; }
+  rpc ListStudioMemberships(ListStudioMembershipsRequest) returns (ListStudioMembershipsResponse) { option (google.api.http) = { get: "/v1/me/memberships" }; }
+  rpc ResolveIdentity(ResolveIdentityRequest) returns (ResolvedIdentity);
+  rpc SearchTeachers(SearchTeachersRequest) returns (SearchTeachersResponse) { option (google.api.http) = { get: "/v1/teachers" }; }
+  rpc InviteTeacher(InviteTeacherRequest) returns (Invitation) {
+    option (google.api.http) = {
+      post: "/v1/studios/{studio_id}/teachers:invite"
+      body: "*"
+      additional_bindings { post: "/v1/teachers/invitations" body: "*" }
+    };
+  }
+  rpc LookupUserByEmail(LookupUserByEmailRequest) returns (LookupUserByEmailResponse) {
+    option (google.api.http) = { get: "/v1/platform/users:lookup" };
+  }
+  rpc ListGlobalRoleAssignments(ListGlobalRoleAssignmentsRequest) returns (ListGlobalRoleAssignmentsResponse) {
+    option (google.api.http) = { get: "/v1/platform/global-role-assignments" };
+  }
+  rpc GrantGlobalRole(GrantGlobalRoleRequest) returns (GlobalRoleAssignment) {
+    option (google.api.http) = { post: "/v1/platform/global-role-assignments" body: "*" };
+  }
+  rpc RevokeGlobalRole(RevokeGlobalRoleRequest) returns (GlobalRoleAssignment) {
+    option (google.api.http) = { post: "/v1/platform/global-role-assignments/{assignment_id}:revoke" body: "*" };
+  }
+  rpc GetChatPrincipal(GetChatPrincipalRequest) returns (ChatPrincipal);
+}
+
+enum Role {
+  ROLE_UNSPECIFIED = 0;
+  ROLE_STUDENT = 1;
+  ROLE_TEACHER = 2;
+  ROLE_STUDIO_ADMIN = 3;
+}
+
+enum GlobalRole {
+  GLOBAL_ROLE_UNSPECIFIED = 0;
+  GLOBAL_ROLE_PLATFORM_ADMIN = 1;
+}
+
+message Profile { string id = 1; string email = 2; string display_name = 3; string avatar_url = 4; string timezone = 5; string bio = 6; string portfolio_url = 7; }
+message Membership { string id = 1; string studio_id = 2; string user_id = 3; Role role = 4; bool active = 5; }
+message Invitation { string id = 1; string studio_id = 2; string email = 3; Role role = 4; string status = 5; google.protobuf.Timestamp expires_at = 6; }
+message ResolvedIdentity { Profile profile = 1; repeated Membership memberships = 2; repeated GlobalRole global_roles = 3; }
+message PlatformUser { string id = 1; string email = 2; string display_name = 3; }
+message GlobalRoleAssignment {
+  string id = 1;
+  PlatformUser user = 2;
+  GlobalRole role = 3;
+  bool active = 4;
+  google.protobuf.Timestamp granted_at = 5;
+  google.protobuf.Timestamp revoked_at = 6;
+}
+message Teacher { string id = 1; string display_name = 2; string avatar_url = 3; string bio = 4; string portfolio_url = 5; string studio_id = 6; }
+message GetMyProfileRequest {}
+message UpdateMyProfileRequest { string display_name = 1; string avatar_url = 2; string timezone = 3; string bio = 4; string portfolio_url = 5; dancehub.common.v1.AuditContext audit = 6; }
+message ListStudioMembershipsRequest {}
+message ListStudioMembershipsResponse { repeated Membership memberships = 1; repeated GlobalRole global_roles = 2; }
+message InviteTeacherRequest { string studio_id = 1; string email = 2; dancehub.common.v1.AuditContext audit = 3; }
+message ResolveIdentityRequest { string oidc_subject = 1; }
+message SearchTeachersRequest { string studio_id = 1; string query = 2; dancehub.common.v1.PageRequest page = 3; }
+message SearchTeachersResponse { repeated Teacher teachers = 1; dancehub.common.v1.PageResponse page = 2; }
+message LookupUserByEmailRequest { string email = 1; }
+message LookupUserByEmailResponse { PlatformUser user = 1; repeated GlobalRole global_roles = 2; }
+message ListGlobalRoleAssignmentsRequest { dancehub.common.v1.PageRequest page = 1; }
+message ListGlobalRoleAssignmentsResponse { repeated GlobalRoleAssignment assignments = 1; dancehub.common.v1.PageResponse page = 2; }
+message GrantGlobalRoleRequest { string user_id = 1; GlobalRole role = 2; dancehub.common.v1.AuditContext audit = 3; }
+message RevokeGlobalRoleRequest { string assignment_id = 1; dancehub.common.v1.AuditContext audit = 2; }
+message GetChatPrincipalRequest { string user_id = 1; }
+message ChatPrincipal { Profile profile = 1; repeated Membership memberships = 2; }

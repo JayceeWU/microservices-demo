@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package dancehub.payments.v1;
+
+option go_package = "github.com/JayceeWU/microservices-demo/dancehub/gen/payments/v1;paymentsv1";
+
+import "common/v1/common.proto";
+import "google/api/annotations.proto";
+import "google/protobuf/timestamp.proto";
+
+service PaymentService {
+  rpc CreatePayment(CreatePaymentRequest) returns (Payment) { option (google.api.http) = { post: "/v1/payments" body: "*" }; }
+  rpc GetPayment(GetPaymentRequest) returns (Payment) { option (google.api.http) = { get: "/v1/payments/{id}" }; }
+  rpc GetPaymentByOrder(GetPaymentByOrderRequest) returns (Payment) { option (google.api.http) = { get: "/v1/orders/{order_id}/payment" }; }
+  rpc SimulatePayment(SimulatePaymentRequest) returns (Payment) { option (google.api.http) = { post: "/v1/payments/{id}/simulate" body: "*" }; }
+  rpc RefundPayment(RefundPaymentRequest) returns (Payment);
+}
+
+message Payment { string id = 1; string order_id = 2; string provider_payment_id = 3; int64 amount_cents = 4; string status = 5; string client_secret = 6; bool simulation_enabled = 7; google.protobuf.Timestamp succeeded_at = 8; google.protobuf.Timestamp payment_expires_at = 9; }
+message CreatePaymentRequest { string order_id = 1; int64 amount_cents = 2; dancehub.common.v1.AuditContext audit = 3; string owner_user_id = 4; google.protobuf.Timestamp payment_expires_at = 5; }
+message GetPaymentRequest { string id = 1; }
+message GetPaymentByOrderRequest { string order_id = 1; }
+message RefundPaymentRequest { string id = 1; int64 amount_cents = 2; dancehub.common.v1.AuditContext audit = 3; }
+message SimulatePaymentRequest { string id = 1; string outcome = 2; dancehub.common.v1.AuditContext audit = 3; }

@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package dancehub.common.v1;
+
+option go_package = "github.com/JayceeWU/microservices-demo/dancehub/gen/common/v1;commonv1";
+
+import "google/protobuf/timestamp.proto";
+
+message PageRequest {
+  int32 page_size = 1;
+  string page_token = 2;
+}
+
+message PageResponse {
+  string next_page_token = 1;
+}
+
+message AuditContext {
+  string idempotency_key = 1;
+  string reason = 2;
+}
+
+message TimeRange {
+  google.protobuf.Timestamp starts_at = 1;
+  google.protobuf.Timestamp ends_at = 2;
+}
+
+// USD is the only supported currency. The wire value is always integer cents.
+message Money {
+  int64 amount_cents = 1;
+}
+
+message CreditAmount {
+  int32 units = 1;
+}
