@@ -12,34 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Define a default value so it's not empty if the builder fails to provide it
-ARG BUILDPLATFORM=linux/amd64
-
-FROM --platform=$BUILDPLATFORM node:20.20.2-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 AS builder
-
-# Some packages (e.g. @google-cloud/profiler) require additional
-# deps for post-install scripts
-RUN apk add --update --no-cache \
-    python3 \
-    make \
-    g++
+FROM node:22-alpine
 
 WORKDIR /usr/src/app
 
-COPY package*.json ./
+COPY src/paymentservice/package*.json ./
 
-RUN npm install --only=production
+RUN npm ci --omit=dev && npm cache clean --force
 
-FROM alpine:3.24.1@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b
+COPY src/paymentservice .
+COPY protos /usr/protos
 
-RUN apk add --no-cache nodejs
+EXPOSE 8080 9090
 
-WORKDIR /usr/src/app
-
-COPY --from=builder /usr/src/app/node_modules ./node_modules
-
-COPY . .
-
-EXPOSE 50051
-
-ENTRYPOINT [ "node", "index.js" ]
+USER 65532:65532
+ENTRYPOINT [ "node", "http-server.js" ]

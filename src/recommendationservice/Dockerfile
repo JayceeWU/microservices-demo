@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Define a default value so it's not empty if the builder fails to provide it
-ARG BUILDPLATFORM=linux/amd64
+ARG BUILDPLATFORM
 
 FROM --platform=$BUILDPLATFORM python:3.14.6-alpine@sha256:26730869004e2b9c4b9ad09cab8625e81d256d1ce97e72df5520e806b1709f92 AS base
 
@@ -27,7 +26,7 @@ RUN apk update \
     && rm -rf /var/cache/apk/*
 
 # get packages
-COPY requirements.txt .
+COPY src/recommendationservice/requirements.txt .
 RUN pip install -r requirements.txt
 
 FROM base
@@ -46,10 +45,11 @@ WORKDIR /recommendationservice
 COPY --from=builder /usr/local/lib/python3.14/ /usr/local/lib/python3.14/
 
 # Add the application
-COPY . .
+COPY src/recommendationservice/ .
+ENV PYTHONPATH=/recommendationservice/gen
 
 # set listen port
-ENV PORT="8080"
-EXPOSE 8080
+EXPOSE 8080 9090
 
+USER 65532:65532
 ENTRYPOINT ["python", "recommendation_server.py"]

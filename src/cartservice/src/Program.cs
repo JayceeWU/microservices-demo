@@ -1,26 +1,52 @@
-// Copyright 2020 Google LLC
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using StackExchange.Redis;
 
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Hosting;
-using cartservice;
+if (args is ["--healthcheck"])
+{
+    using var healthClient = new HttpClient { Timeout = TimeSpan.FromSeconds(2) };
+    using var response = await healthClient.GetAsync("http://127.0.0.1:8080/healthz");
+    Environment.ExitCode = response.IsSuccessStatusCode ? 0 : 1;
+    return;
+}
 
-CreateHostBuilder(args).Build().Run();
-
-static IHostBuilder CreateHostBuilder(string[] args) =>
-    Host.CreateDefaultBuilder(args)
-        .ConfigureWebHostDefaults(webBuilder =>
-        {
-            webBuilder.UseStartup<Startup>();
-        });
+var builder=WebApplication.CreateBuilder(args);
+builder.WebHost.ConfigureKestrel(options=>{
+    options.ListenAnyIP(8080,listen=>listen.Protocols=HttpProtocols.Http1);
+    options.ListenAnyIP(9090,listen=>listen.Protocols=HttpProtocols.Http2);
+});
+var redisAddress = Environment.GetEnvironmentVariable("REDIS_ADDR")
+    ?? throw new InvalidOperationException("REDIS_ADDR is required");
+var serviceNamespace = Environment.GetEnvironmentVariable("OTEL_SERVICE_NAMESPACE")
+    ?? throw new InvalidOperationException("OTEL_SERVICE_NAMESPACE is required");
+var deploymentEnvironment = Environment.GetEnvironmentVariable("ENVIRONMENT")
+    ?? throw new InvalidOperationException("ENVIRONMENT is required");
+// Connect lazily and keep retrying in the background so the pod does not crash-loop while
+// Redis is still starting; the readiness of individual calls is reported per request.
+var redisOptions = ConfigurationOptions.Parse(redisAddress);
+redisOptions.AbortOnConnectFail = false;
+builder.Services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(redisOptions));
+builder.Services.AddSingleton<ICartStore, RedisCartStore>();
+var meshPolicy = MeshPeerPolicy.FromEnvironment(Environment.GetEnvironmentVariable);
+builder.Services.AddSingleton(meshPolicy);
+builder.Services.AddGrpc(options => options.Interceptors.Add<MeshPeerInterceptor>());
+builder.Services
+    .AddGrpcHealthChecks(options => options.Services.Map("", _ => true))
+    .AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy());
+// Same resource identity as the Go, Node.js and Python services.
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource
+        .AddService("cartservice", serviceNamespace: serviceNamespace)
+        .AddAttributes(new Dictionary<string, object> { ["deployment.environment.name"] = deploymentEnvironment }))
+    .WithTracing(tracing => tracing.AddAspNetCoreInstrumentation().AddRedisInstrumentation().AddOtlpExporter())
+    .WithMetrics(metrics => metrics.AddAspNetCoreInstrumentation().AddRuntimeInstrumentation().AddOtlpExporter());
+var app=builder.Build();
+app.Logger.LogInformation("mesh peer enforcement enabled={Enabled} trustDomain={TrustDomain}", meshPolicy.Enforce, meshPolicy.TrustDomain);
+app.MapGrpcService<CartGrpcService>();
+app.MapGrpcHealthChecksService();
+// This service is published as a fully trimmed single-file binary. Returning
+// plain text avoids reflection-based anonymous JSON metadata being trimmed.
+app.MapGet("/healthz", () => Results.Text("ok", "text/plain"));
+app.Run();
