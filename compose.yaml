@@ -283,7 +283,7 @@ services:
   minio:
     profiles: [infra, core, full]
     <<: *service-defaults
-    image: minio/minio:RELEASE.2025-07-23T15-54-02Z
+    image: quay.io/minio/minio:RELEASE.2025-07-23T15-54-02Z
     command: ['server', '/data', '--console-address', ':9001']
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-dancehub}
