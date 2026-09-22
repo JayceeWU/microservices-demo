@@ -1,0 +1,52 @@
+:root {
+  --brand-pink: #db2777;
+  --brand-pink-soft: #fdf2f8;
+  --brand-purple: #7e22ce;
+  --brand-purple-deep: #2e1065;
+  --brand-purple-soft: #f3e8ff;
+  --surface: #ffffff;
+  --surface-muted: #faf7fc;
+  --text: #241334;
+  --text-muted: #6b5a78;
+  --border: #eadcf2;
+  --success: #047857;
+  --danger: #be123c;
+  --radius-sm: 10px;
+  --radius-md: 18px;
+  --radius-lg: 28px;
+  --shadow-card: 0 16px 45px rgba(46, 16, 101, 0.1);
+  --font-sans: Inter, 'Noto Sans SC', ui-sans-serif, system-ui, sans-serif;
+  --control-height: 44px;
+  --control-radius: 999px;
+  --control-font-size: 14px;
+  --control-font-weight: 600;
+  --control-padding-x: 18px;
+  --control-transition: 160ms;
+  --control-focus: #a855f7;
+  --control-primary-hover: #be185d;
+  --control-secondary-hover: #ead8fb;
+  --control-danger-soft: #fff1f2;
+}
+
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  color: var(--text);
+  background: var(--surface-muted);
+  font-family: var(--font-sans);
+}
+a {
+  color: inherit;
+}
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+:focus-visible {
+  outline: 3px solid #c084fc;
+  outline-offset: 3px;
+}

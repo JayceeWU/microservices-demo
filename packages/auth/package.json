@@ -1,0 +1,11 @@
+{
+  "name": "@dancehub/auth",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "node --test --experimental-test-isolation=none *.test.js"
+  },
+  "type": "module",
+  "types": "./index.d.ts",
+  "exports": "./index.js"
+}

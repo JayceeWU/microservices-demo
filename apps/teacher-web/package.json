@@ -1,0 +1,32 @@
+{
+  "name": "teacher-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "ng serve --port 4200",
+    "build": "ng build",
+    "test": "node --test --experimental-test-isolation=none --experimental-test-coverage --test-coverage-include=src/workspace-policy.js"
+  },
+  "dependencies": {
+    "@angular/common": "20.3.29",
+    "@angular/compiler": "20.3.29",
+    "@angular/core": "20.3.29",
+    "@angular/forms": "20.3.29",
+    "@angular/platform-browser": "20.3.29",
+    "@angular/router": "20.3.29",
+    "@dancehub/api-client": "*",
+    "@dancehub/auth": "*",
+    "@dancehub/telemetry": "*",
+    "@dancehub/ui": "*",
+    "rxjs": "^7.8.2",
+    "tslib": "^2.8.1",
+    "zone.js": "0.15.1"
+  },
+  "devDependencies": {
+    "@angular/build": "20.3.36",
+    "@angular/cli": "20.3.36",
+    "@angular/compiler-cli": "20.3.29",
+    "typescript": "5.9.2"
+  }
+}

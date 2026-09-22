@@ -1,0 +1,45 @@
+{
+  "name": "bay-area-dance-hub",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "verify:local": "node scripts/verify-local.mjs",
+    "format": "prettier --write \"**/*.{js,jsx,cjs,mjs,ts,tsx,json,yaml,yml,md,mdx}\"",
+    "format:check": "prettier --check \"**/*.{js,jsx,cjs,mjs,ts,tsx,json,yaml,yml,md,mdx}\"",
+    "lint": "eslint apps packages src/paymentservice tests/e2e playwright.config.ts --max-warnings=0",
+    "language:check": "node scripts/check-repository-language.mjs",
+    "quality:static": "npm run language:check && npm run format:check && npm run lint",
+    "build:web": "npm run build --workspace student-web && npm run build --workspace teacher-web && npm run build --workspace admin-web",
+    "test": "npm run test:web && npm --prefix src/paymentservice test",
+    "test:web": "npm run test --if-present --workspaces",
+    "generate:openapi3": "swagger2openapi gen/openapi/dancehub-v1.swagger.json --outfile gen/openapi/dancehub-v1.openapi.json",
+    "generate:api-types": "npm run generate:openapi3 && openapi-typescript gen/openapi/dancehub-v1.openapi.json -o packages/api-client/openapi.d.ts",
+    "dev:student": "npm run dev --workspace student-web",
+    "dev:teacher": "npm run start --workspace teacher-web",
+    "dev:admin": "npm run dev --workspace admin-web",
+    "e2e": "playwright test",
+    "e2e:critical": "playwright test --grep @critical"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.5",
+    "@playwright/test": "^1.55.0",
+    "angular-eslint": "20.7.0",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.4",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-jsx-a11y": "6.10.2",
+    "eslint-plugin-playwright": "2.11.0",
+    "eslint-plugin-react": "7.37.5",
+    "eslint-plugin-react-hooks": "7.1.1",
+    "globals": "17.12.0",
+    "js-yaml": "4.3.2",
+    "openapi-typescript": "^7.13.0",
+    "prettier": "3.9.6",
+    "swagger2openapi": "^7.0.8",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.69.0"
+  }
+}

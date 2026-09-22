@@ -1,0 +1,27 @@
+{
+  "name": "student-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "start": "next start --port 3000",
+    "test": "node --test --experimental-test-isolation=none --experimental-test-coverage --test-coverage-include=app/workspace-policy.js"
+  },
+  "dependencies": {
+    "@dancehub/api-client": "*",
+    "@dancehub/telemetry": "*",
+    "@dancehub/ui": "*",
+    "@tanstack/react-query": "^5.85.5",
+    "next": "16.3.4",
+    "next-auth": "5.0.0-beta.32",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "@types/react": "^19.1.10",
+    "typescript": "^5.9.2"
+  }
+}

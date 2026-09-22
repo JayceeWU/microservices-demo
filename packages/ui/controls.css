@@ -1,0 +1,209 @@
+/* Explicit classes keep action controls separate from navigation and MUI internals. */
+.dh-button,
+.dh-choice,
+.dh-select {
+  box-sizing: border-box;
+  min-height: var(--control-height);
+  max-width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--control-radius);
+  font-family: var(--font-sans);
+  font-size: var(--control-font-size);
+  font-weight: var(--control-font-weight);
+  line-height: 1.5;
+  transition:
+    background-color var(--control-transition) ease,
+    border-color var(--control-transition) ease,
+    color var(--control-transition) ease,
+    box-shadow var(--control-transition) ease;
+}
+
+.dh-button,
+.dh-choice {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px var(--control-padding-x);
+  background: var(--brand-purple-soft);
+  color: var(--brand-purple);
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.dh-button {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.dh-button--primary {
+  border-color: transparent;
+  background: var(--brand-pink);
+  color: var(--surface);
+}
+
+.dh-button--ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--brand-purple);
+}
+
+.dh-button--danger {
+  border-color: #fecdd3;
+  background: var(--control-danger-soft);
+  color: var(--danger);
+}
+
+.dh-button--inverse {
+  border-color: #ffffff40;
+  background: transparent;
+  color: #f3e8ff;
+}
+
+.dh-choice {
+  width: 100%;
+  justify-content: flex-start;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.dh-choice[aria-pressed='true'],
+.dh-choice.is-active {
+  border-color: var(--brand-purple);
+  background: var(--brand-purple-soft);
+  color: var(--brand-purple-deep);
+}
+
+.dh-choice > span {
+  flex-shrink: 0;
+}
+
+.dh-file::file-selector-button {
+  min-height: var(--control-height);
+  margin-right: 12px;
+  padding: 10px var(--control-padding-x);
+  border: 1px solid var(--border);
+  border-radius: var(--control-radius);
+  background: var(--brand-purple-soft);
+  color: var(--brand-purple);
+  font-family: var(--font-sans);
+  font-size: var(--control-font-size);
+  font-weight: var(--control-font-weight);
+  line-height: 1.5;
+  cursor: pointer;
+  transition: background-color var(--control-transition) ease;
+}
+
+.dh-select {
+  appearance: none;
+  min-width: 0;
+  padding: 10px 42px 10px var(--control-padding-x);
+  color: var(--text);
+  background-color: var(--surface);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237e22ce' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 16px;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.dh-select option {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.dh-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+@media (hover: hover) {
+  .dh-file:hover:not(:disabled)::file-selector-button {
+    background-color: var(--control-secondary-hover);
+  }
+
+  .dh-button:hover:not(:disabled):not([aria-disabled='true']),
+  .dh-choice:hover:not(:disabled):not([aria-disabled='true']) {
+    border-color: #d8b4fe;
+    background-color: var(--control-secondary-hover);
+  }
+
+  .dh-button--primary:hover:not(:disabled):not([aria-disabled='true']) {
+    border-color: transparent;
+    background-color: var(--control-primary-hover);
+  }
+
+  .dh-button--ghost:hover:not(:disabled):not([aria-disabled='true']) {
+    border-color: transparent;
+    background-color: var(--brand-purple-soft);
+  }
+
+  .dh-button--danger:hover:not(:disabled):not([aria-disabled='true']) {
+    border-color: #fda4af;
+    background-color: #ffe4e6;
+  }
+
+  .dh-button--inverse:hover:not(:disabled):not([aria-disabled='true']) {
+    border-color: #ffffff80;
+    background-color: #ffffff18;
+  }
+
+  .dh-select:hover:not(:disabled) {
+    border-color: #c084fc;
+    background-color: var(--surface-muted);
+  }
+}
+
+.dh-button:active:not(:disabled):not([aria-disabled='true']),
+.dh-choice:active:not(:disabled):not([aria-disabled='true']) {
+  box-shadow: inset 0 2px 4px #2e106522;
+}
+
+.dh-button:focus-visible,
+.dh-choice:focus-visible,
+.dh-file:focus-visible,
+.dh-select:focus-visible {
+  outline: 3px solid var(--control-focus);
+  outline-offset: 3px;
+}
+
+.dh-button--inverse:focus-visible {
+  outline-color: #e9d5ff;
+}
+
+.dh-button:disabled,
+.dh-button[aria-disabled='true'],
+.dh-choice:disabled,
+.dh-choice[aria-disabled='true'],
+.dh-file:disabled,
+.dh-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dh-button,
+  .dh-choice,
+  .dh-file::file-selector-button,
+  .dh-select {
+    transition: none;
+  }
+}
+
+@media (forced-colors: active) {
+  .dh-select {
+    appearance: auto;
+    background-image: none;
+    padding-right: var(--control-padding-x);
+  }
+}
