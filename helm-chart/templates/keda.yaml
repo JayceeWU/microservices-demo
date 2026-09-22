@@ -1,0 +1,33 @@
+{{- if .Values.dancehub.keda.enabled }}
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata:
+  name: dancehub-rabbitmq
+  namespace: {{ .Release.Namespace }}
+spec:
+  secretTargetRef:
+    - parameter: host
+      name: {{ .Values.dancehub.existingSecret }}
+      key: {{ .Values.dancehub.keda.rabbitHostSecretKey }}
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: flashsale-orderservice
+  namespace: {{ .Release.Namespace }}
+spec:
+  scaleTargetRef:
+    name: orderservice
+  minReplicaCount: 2
+  maxReplicaCount: {{ .Values.dancehub.keda.maxReplicas }}
+  cooldownPeriod: 60
+  triggers:
+    - type: rabbitmq
+      metadata:
+        protocol: amqp
+        mode: QueueLength
+        queueName: {{ .Values.dancehub.keda.queueName }}
+        value: {{ .Values.dancehub.keda.queueLength | quote }}
+      authenticationRef:
+        name: dancehub-rabbitmq
+{{- end }}

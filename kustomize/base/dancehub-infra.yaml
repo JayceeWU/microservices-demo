@@ -1,0 +1,324 @@
+apiVersion: v1
+kind: Secret
+metadata: { name: dancehub-secrets }
+type: Opaque
+stringData:
+  postgres-password: dancehub-dev
+  DATABASE_ADMIN_URL: postgres://dancehub:dancehub-dev@postgres:5432/dancehub?sslmode=disable
+  DATABASE_URL: postgres://dancehub_migrator:dancehub-migrator-dev@postgres:5432/dancehub?sslmode=disable
+  DATABASE_MIGRATOR_PASSWORD: dancehub-migrator-dev
+  ACCOUNT_DB_PASSWORD: dancehub-account-dev
+  CATALOG_DB_PASSWORD: dancehub-catalog-dev
+  SCHEDULING_DB_PASSWORD: dancehub-scheduling-dev
+  CREDIT_DB_PASSWORD: dancehub-credit-dev
+  ORDERS_DB_PASSWORD: dancehub-orders-dev
+  PAYMENT_DB_PASSWORD: dancehub-payment-dev
+  PAYROLL_DB_PASSWORD: dancehub-payroll-dev
+  RECOMMENDATION_DB_PASSWORD: dancehub-recommendation-dev
+  OUTBOX_DB_PASSWORD: dancehub-outbox-dev
+  PROJECTION_DB_PASSWORD: dancehub-projection-dev
+  KEYCLOAK_DB_PASSWORD: dancehub-keycloak-dev
+  CHAT_DB_PASSWORD: dancehub-chat-dev
+  CHAT_RELAY_DB_PASSWORD: dancehub-chat-relay-dev
+  CHAT_MEDIA_DB_PASSWORD: dancehub-chat-media-dev
+  rabbitmq-password: dancehub-dev
+  migrator-database-url: postgres://dancehub_migrator:dancehub-migrator-dev@postgres:5432/dancehub?sslmode=disable
+  account-database-url: postgres://account_runtime:dancehub-account-dev@postgres:5432/dancehub?sslmode=disable
+  catalog-database-url: postgres://catalog_runtime:dancehub-catalog-dev@postgres:5432/dancehub?sslmode=disable
+  scheduling-database-url: postgres://scheduling_runtime:dancehub-scheduling-dev@postgres:5432/dancehub?sslmode=disable
+  credit-database-url: Host=postgres;Port=5432;Database=dancehub;Username=credit_runtime;Password=dancehub-credit-dev
+  orders-database-url: postgres://orders_runtime:dancehub-orders-dev@postgres:5432/dancehub?sslmode=disable
+  payment-database-url: postgres://payment_runtime:dancehub-payment-dev@postgres:5432/dancehub?sslmode=disable
+  payroll-database-url: postgres://payroll_runtime:dancehub-payroll-dev@postgres:5432/dancehub?sslmode=disable
+  recommendation-database-url: postgres://recommendation_runtime:dancehub-recommendation-dev@postgres:5432/dancehub?sslmode=disable
+  outbox-database-url: postgres://outbox_worker:dancehub-outbox-dev@postgres:5432/dancehub?sslmode=disable
+  keycloak-db-password: dancehub-keycloak-dev
+  chat-database-url: postgres://chat_runtime:dancehub-chat-dev@postgres:5432/dancehub?sslmode=disable
+  chat-relay-database-url: postgres://chat_relay:dancehub-chat-relay-dev@postgres:5432/dancehub?sslmode=disable
+  chat-media-database-url: postgres://chat_media_worker:dancehub-chat-media-dev@postgres:5432/dancehub?sslmode=disable
+  rabbitmq-url: amqp://dancehub:dancehub-dev@rabbitmq:5672/
+  keycloak-admin-password: admin-dev
+  minio-password: dancehub-dev-password
+  object-storage-access-key: dancehub
+  object-storage-secret-key: dancehub-dev-password
+  stripe-secret-key: ''
+  stripe-webhook-secret: ''
+  auth-secret: dancehub-local-auth-secret-change-me-32chars
+  auth-keycloak-secret: student-web-local-secret
+---
+apiVersion: v1
+kind: Service
+metadata: { name: postgres }
+spec: { selector: { app: postgres }, ports: [{ port: 5432, targetPort: 5432 }] }
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata: { name: postgres }
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector: { matchLabels: { app: postgres } }
+  template:
+    metadata: { labels: { app: postgres } }
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:17-alpine
+          ports: [{ containerPort: 5432 }]
+          env:
+            - { name: POSTGRES_DB, value: dancehub }
+            - { name: POSTGRES_USER, value: dancehub }
+            - name: POSTGRES_PASSWORD
+              valueFrom: { secretKeyRef: { name: dancehub-secrets, key: postgres-password } }
+          readinessProbe:
+            {
+              exec: { command: [pg_isready, -U, dancehub, -d, dancehub] },
+              initialDelaySeconds: 5,
+              periodSeconds: 5,
+            }
+          resources: { requests: { cpu: 100m, memory: 256Mi }, limits: { cpu: '1', memory: 1Gi } }
+          volumeMounts: [{ name: data, mountPath: /var/lib/postgresql/data }]
+  volumeClaimTemplates:
+    - metadata: { name: data }
+      spec: { accessModes: [ReadWriteOnce], resources: { requests: { storage: 10Gi } } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: redis-cart }
+spec: { selector: { app: redis-cart }, ports: [{ port: 6379 }] }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: redis-cart }
+spec:
+  selector: { matchLabels: { app: redis-cart } }
+  template:
+    metadata: { labels: { app: redis-cart } }
+    spec:
+      containers:
+        - {
+            name: redis,
+            image: redis:7-alpine,
+            args: [redis-server, --appendonly, 'yes'],
+            ports: [{ containerPort: 6379 }],
+            resources:
+              { requests: { cpu: 50m, memory: 64Mi }, limits: { cpu: 300m, memory: 256Mi } },
+          }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: redis-flashsale }
+spec: { selector: { app: redis-flashsale }, ports: [{ port: 6379 }] }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: redis-flashsale-headless }
+spec:
+  clusterIP: None
+  selector: { app: redis-flashsale }
+  ports: [{ port: 6379 }]
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata: { name: redis-flashsale }
+spec:
+  serviceName: redis-flashsale-headless
+  replicas: 1
+  selector: { matchLabels: { app: redis-flashsale } }
+  template:
+    metadata: { labels: { app: redis-flashsale } }
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          args:
+            [
+              redis-server,
+              --dir,
+              /data,
+              --appendonly,
+              'yes',
+              --appendfsync,
+              everysec,
+              --maxmemory-policy,
+              noeviction,
+            ]
+          ports: [{ containerPort: 6379 }]
+          startupProbe:
+            exec: { command: [redis-cli, ping] }
+            periodSeconds: 2
+            failureThreshold: 60
+          readinessProbe:
+            exec: { command: [redis-cli, ping] }
+            periodSeconds: 5
+          resources: { requests: { cpu: 100m, memory: 128Mi }, limits: { cpu: '1', memory: 512Mi } }
+          volumeMounts: [{ name: data, mountPath: /data }]
+  # Generated claims use the StatefulSet default Retain policy on deletion and scale-down.
+  volumeClaimTemplates:
+    - metadata: { name: data }
+      spec: { accessModes: [ReadWriteOnce], resources: { requests: { storage: 2Gi } } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: rabbitmq }
+spec:
+  {
+    selector: { app: rabbitmq },
+    ports: [{ name: amqp, port: 5672 }, { name: management, port: 15672 }],
+  }
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata: { name: rabbitmq }
+spec:
+  serviceName: rabbitmq
+  replicas: 1
+  selector: { matchLabels: { app: rabbitmq } }
+  template:
+    metadata: { labels: { app: rabbitmq } }
+    spec:
+      containers:
+        - name: rabbitmq
+          image: rabbitmq:4-management-alpine
+          ports: [{ containerPort: 5672 }, { containerPort: 15672 }]
+          env:
+            - { name: RABBITMQ_DEFAULT_USER, value: dancehub }
+            - name: RABBITMQ_DEFAULT_PASS
+              valueFrom: { secretKeyRef: { name: dancehub-secrets, key: rabbitmq-password } }
+          resources: { requests: { cpu: 100m, memory: 256Mi }, limits: { cpu: '1', memory: 1Gi } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: kafka }
+spec:
+  {
+    selector: { app: kafka },
+    ports: [{ name: broker, port: 29092 }, { name: controller, port: 29093 }],
+  }
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata: { name: kafka }
+spec:
+  serviceName: kafka
+  replicas: 1
+  selector: { matchLabels: { app: kafka } }
+  template:
+    metadata: { labels: { app: kafka } }
+    spec:
+      containers:
+        - name: kafka
+          image: apache/kafka:4.0.0
+          ports: [{ containerPort: 29092 }, { containerPort: 29093 }]
+          env:
+            - { name: KAFKA_NODE_ID, value: '1' }
+            - { name: KAFKA_PROCESS_ROLES, value: 'broker,controller' }
+            - { name: KAFKA_LISTENERS, value: 'PLAINTEXT://:29092,CONTROLLER://:29093' }
+            - { name: KAFKA_ADVERTISED_LISTENERS, value: 'PLAINTEXT://kafka:29092' }
+            - { name: KAFKA_CONTROLLER_LISTENER_NAMES, value: CONTROLLER }
+            - {
+                name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP,
+                value: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT',
+              }
+            - { name: KAFKA_CONTROLLER_QUORUM_VOTERS, value: '1@kafka:29093' }
+            - { name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR, value: '1' }
+          resources: { requests: { cpu: 200m, memory: 512Mi }, limits: { cpu: '2', memory: 2Gi } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: keycloak }
+spec: { selector: { app: keycloak }, ports: [{ port: 8080 }] }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: keycloak }
+spec:
+  selector: { matchLabels: { app: keycloak } }
+  template:
+    metadata: { labels: { app: keycloak } }
+    spec:
+      initContainers:
+        - name: prepare-quarkus
+          image: quay.io/keycloak/keycloak:26.3
+          command: [/bin/bash, -ec]
+          args: ['cp -R /opt/keycloak/lib/quarkus/. /quarkus/']
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: [ALL] }
+          volumeMounts:
+            - { name: quarkus, mountPath: /quarkus }
+            - { name: tmp, mountPath: /tmp }
+          resources: { requests: { cpu: 50m, memory: 64Mi }, limits: { cpu: 500m, memory: 128Mi } }
+      containers:
+        - name: keycloak
+          image: quay.io/keycloak/keycloak:26.3
+          args: [start-dev, --import-realm]
+          ports: [{ containerPort: 8080 }]
+          env:
+            - { name: KC_DB, value: postgres }
+            - {
+                name: KC_DB_URL,
+                value: 'jdbc:postgresql://postgres:5432/dancehub?currentSchema=keycloak',
+              }
+            - { name: KC_DB_USERNAME, value: keycloak_runtime }
+            - name: KC_DB_PASSWORD
+              valueFrom: { secretKeyRef: { name: dancehub-secrets, key: keycloak-db-password } }
+            - { name: KC_BOOTSTRAP_ADMIN_USERNAME, value: admin }
+            - name: KC_BOOTSTRAP_ADMIN_PASSWORD
+              valueFrom: { secretKeyRef: { name: dancehub-secrets, key: keycloak-admin-password } }
+            - { name: KC_HEALTH_ENABLED, value: 'true' }
+            - { name: KC_HOSTNAME, value: 'http://localhost:8081' }
+          startupProbe:
+            tcpSocket: { port: 8080 }
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            {
+              tcpSocket: { port: 8080 },
+              initialDelaySeconds: 5,
+              periodSeconds: 2,
+              failureThreshold: 30,
+            }
+          livenessProbe: { tcpSocket: { port: 8080 }, initialDelaySeconds: 30, periodSeconds: 10 }
+          volumeMounts:
+            - { name: realm, mountPath: /opt/keycloak/data/import, readOnly: true }
+            # start-dev rebuilds Quarkus artifacts; keep only that directory writable.
+            - { name: quarkus, mountPath: /opt/keycloak/lib/quarkus }
+          resources: { requests: { cpu: 200m, memory: 512Mi }, limits: { cpu: '1', memory: 1Gi } }
+      volumes:
+        - { name: realm, configMap: { name: keycloak-realm } }
+        - { name: quarkus, emptyDir: {} }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: minio }
+spec:
+  { selector: { app: minio }, ports: [{ name: api, port: 9000 }, { name: console, port: 9001 }] }
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata: { name: minio }
+spec:
+  serviceName: minio
+  replicas: 1
+  selector: { matchLabels: { app: minio } }
+  template:
+    metadata: { labels: { app: minio } }
+    spec:
+      containers:
+        - name: minio
+          image: minio/minio:RELEASE.2025-07-23T15-54-02Z
+          args: [server, /data, --console-address, ':9001']
+          ports: [{ containerPort: 9000 }, { containerPort: 9001 }]
+          env:
+            - { name: MINIO_ROOT_USER, value: dancehub }
+            - {
+                name: MINIO_ROOT_PASSWORD,
+                valueFrom: { secretKeyRef: { name: dancehub-secrets, key: minio-password } },
+              }
+          volumeMounts: [{ name: data, mountPath: /data }]
+          resources: { requests: { cpu: 100m, memory: 256Mi }, limits: { cpu: '1', memory: 1Gi } }
+  volumeClaimTemplates:
+    - metadata: { name: data }
+      spec: { accessModes: [ReadWriteOnce], resources: { requests: { storage: 10Gi } } }

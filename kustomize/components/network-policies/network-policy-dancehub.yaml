@@ -1,0 +1,354 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: dancehub-dns-egress }
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    - to: [{ namespaceSelector: {} }]
+      ports: [{ protocol: UDP, port: 53 }, { protocol: TCP, port: 53 }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: dancehub-web-ingress }
+spec:
+  podSelector:
+    matchExpressions: [{ key: app, operator: In, values: [student-web, teacher-web, admin-web] }]
+  policyTypes: [Ingress]
+  ingress:
+    - from: [{ namespaceSelector: {} }]
+      ports: [{ protocol: TCP, port: 8080 }, { protocol: TCP, port: 3000 }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: dancehub-gateway-access }
+spec:
+  podSelector: { matchLabels: { app: gatewayservice } }
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - podSelector:
+            matchExpressions:
+              [{ key: app, operator: In, values: [student-web, teacher-web, admin-web] }]
+        - namespaceSelector: {}
+      ports: [{ protocol: TCP, port: 8080 }]
+  egress:
+    - to:
+        - podSelector:
+            matchExpressions:
+              [
+                {
+                  key: app,
+                  operator: In,
+                  values:
+                    [
+                      accountservice,
+                      catalogservice,
+                      schedulingservice,
+                      creditservice,
+                      orderservice,
+                      paymentservice,
+                      payrollservice,
+                      cartservice,
+                      recommendationservice,
+                      chatservice,
+                    ],
+                },
+              ]
+      ports: [{ protocol: TCP, port: 9090 }]
+    - to: [{ podSelector: { matchLabels: { app: paymentservice } } }]
+      ports: [{ protocol: TCP, port: 8080 }]
+    - to: [{ podSelector: { matchLabels: { app: keycloak } } }]
+      ports: [{ protocol: TCP, port: 8080 }]
+    - to: [{ podSelector: { matchLabels: { app: otel-collector } } }]
+      ports: [{ protocol: TCP, port: 4318 }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: dancehub-grpc-service-ingress }
+spec:
+  podSelector:
+    matchExpressions:
+      [
+        {
+          key: app,
+          operator: In,
+          values:
+            [
+              accountservice,
+              catalogservice,
+              schedulingservice,
+              creditservice,
+              orderservice,
+              paymentservice,
+              payrollservice,
+              cartservice,
+              recommendationservice,
+              chatservice,
+            ],
+        },
+      ]
+  policyTypes: [Ingress]
+  ingress:
+    - from: [{ podSelector: { matchLabels: { app: gatewayservice } } }]
+      ports: [{ protocol: TCP, port: 9090 }]
+    - from:
+        - podSelector:
+            matchExpressions:
+              [
+                {
+                  key: app,
+                  operator: In,
+                  values: [schedulingservice, orderservice, payment-order-saga, chatservice],
+                },
+              ]
+      ports: [{ protocol: TCP, port: 9090 }]
+    - from: [{ podSelector: { matchLabels: { app: gatewayservice } } }]
+      ports: [{ protocol: TCP, port: 8080 }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: dancehub-service-egress }
+spec:
+  podSelector:
+    matchExpressions:
+      [
+        {
+          key: app,
+          operator: In,
+          values:
+            [
+              accountservice,
+              catalogservice,
+              schedulingservice,
+              creditservice,
+              orderservice,
+              paymentservice,
+              payrollservice,
+              recommendationservice,
+              chatservice,
+            ],
+        },
+      ]
+  policyTypes: [Egress]
+  egress:
+    - to: [{ podSelector: { matchLabels: { app: postgres } } }]
+      ports: [{ protocol: TCP, port: 5432 }]
+    - to: [{ podSelector: { matchLabels: { app: otel-collector } } }]
+      ports: [{ protocol: TCP, port: 4317 }, { protocol: TCP, port: 4318 }]
+    - to:
+        - podSelector:
+            matchExpressions:
+              [
+                {
+                  key: app,
+                  operator: In,
+                  values:
+                    [
+                      accountservice,
+                      catalogservice,
+                      schedulingservice,
+                      creditservice,
+                      paymentservice,
+                    ],
+                },
+              ]
+      ports: [{ protocol: TCP, port: 9090 }]
+    - to: [{ podSelector: { matchLabels: { app: redis-flashsale } } }]
+      ports: [{ protocol: TCP, port: 6379 }]
+    - to: [{ podSelector: { matchLabels: { app: redis-chat } } }]
+      ports: [{ protocol: TCP, port: 6379 }]
+    - to: [{ podSelector: { matchLabels: { app: minio } } }]
+      ports: [{ protocol: TCP, port: 9000 }]
+    - to: [{ podSelector: { matchLabels: { app: rabbitmq } } }]
+      ports: [{ protocol: TCP, port: 5672 }]
+    - to: [{ podSelector: { matchLabels: { app: kafka } } }]
+      ports: [{ protocol: TCP, port: 29092 }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: dancehub-worker-egress }
+spec:
+  podSelector:
+    matchExpressions:
+      [{ key: app, operator: In, values: [outbox-relay, payment-order-saga, chat-media-worker] }]
+  policyTypes: [Egress]
+  egress:
+    - to: [{ podSelector: { matchLabels: { app: postgres } } }]
+      ports: [{ protocol: TCP, port: 5432 }]
+    - to: [{ podSelector: { matchLabels: { app: kafka } } }]
+      ports: [{ protocol: TCP, port: 29092 }]
+    - to: [{ podSelector: { matchLabels: { app: rabbitmq } } }]
+      ports: [{ protocol: TCP, port: 5672 }]
+    - to: [{ podSelector: { matchLabels: { app: orderservice } } }]
+      ports: [{ protocol: TCP, port: 9090 }]
+    - to: [{ podSelector: { matchLabels: { app: otel-collector } } }]
+      ports: [{ protocol: TCP, port: 4317 }, { protocol: TCP, port: 4318 }]
+    - to: [{ podSelector: { matchLabels: { app: minio } } }]
+      ports: [{ protocol: TCP, port: 9000 }]
+    - to: [{ podSelector: { matchLabels: { app: clamav } } }]
+      ports: [{ protocol: TCP, port: 3310 }]
+    - to: [{ ipBlock: { cidr: 0.0.0.0/0 } }]
+      ports: [{ protocol: TCP, port: 443 }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: dancehub-cart-egress }
+spec:
+  podSelector: { matchLabels: { app: cartservice } }
+  policyTypes: [Egress]
+  egress:
+    - to: [{ podSelector: { matchLabels: { app: redis-cart } } }]
+      ports: [{ protocol: TCP, port: 6379 }]
+    - to: [{ podSelector: { matchLabels: { app: otel-collector } } }]
+      ports: [{ protocol: TCP, port: 4317 }, { protocol: TCP, port: 4318 }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: dancehub-chat-managed-storage-egress }
+spec:
+  podSelector: { matchLabels: { app: chatservice } }
+  policyTypes: [Egress]
+  egress:
+    - to: [{ ipBlock: { cidr: 0.0.0.0/0 } }]
+      ports: [{ protocol: TCP, port: 443 }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: dancehub-infrastructure-ingress }
+spec:
+  podSelector:
+    matchExpressions:
+      [
+        {
+          key: app,
+          operator: In,
+          values:
+            [
+              postgres,
+              kafka,
+              rabbitmq,
+              redis-cart,
+              redis-flashsale,
+              redis-chat,
+              keycloak,
+              minio,
+              clamav,
+              otel-collector,
+            ],
+        },
+      ]
+  policyTypes: [Ingress]
+  ingress:
+    - from:
+        - podSelector:
+            matchExpressions:
+              [
+                {
+                  key: app,
+                  operator: In,
+                  values:
+                    [
+                      gatewayservice,
+                      accountservice,
+                      catalogservice,
+                      schedulingservice,
+                      creditservice,
+                      orderservice,
+                      paymentservice,
+                      payrollservice,
+                      recommendationservice,
+                      cartservice,
+                      outbox-relay,
+                      payment-order-saga,
+                      dancehub-migrations,
+                      keycloak,
+                      chatservice,
+                      chat-media-worker,
+                      student-web,
+                    ],
+                },
+              ]
+---
+# student-web exchanges authorization codes and refresh tokens with Keycloak server-side.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: dancehub-student-web-egress }
+spec:
+  podSelector: { matchLabels: { app: student-web } }
+  policyTypes: [Egress]
+  egress:
+    - to: [{ podSelector: { matchLabels: { app: keycloak } } }]
+      ports: [{ protocol: TCP, port: 8080 }]
+---
+# Jobs and Keycloak need database access before application Pods can become ready.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: dancehub-bootstrap-postgres-egress }
+spec:
+  podSelector:
+    matchExpressions:
+      [{ key: app, operator: In, values: [dancehub-migrations, dancehub-seed, keycloak] }]
+  policyTypes: [Egress]
+  egress:
+    - to: [{ podSelector: { matchLabels: { app: postgres } } }]
+      ports: [{ protocol: TCP, port: 5432 }]
+---
+# Keep seed access limited to PostgreSQL instead of the generic infrastructure allowlist.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: dancehub-seed-postgres-ingress }
+spec:
+  podSelector: { matchLabels: { app: postgres } }
+  policyTypes: [Ingress]
+  ingress:
+    - from: [{ podSelector: { matchLabels: { app: dancehub-seed } } }]
+      ports: [{ protocol: TCP, port: 5432 }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: dancehub-collector-jaeger-egress }
+spec:
+  podSelector: { matchLabels: { app: otel-collector } }
+  policyTypes: [Egress]
+  egress:
+    - to: [{ podSelector: { matchLabels: { app: jaeger } } }]
+      ports: [{ protocol: TCP, port: 4317 }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: dancehub-jaeger-ingress }
+spec:
+  podSelector: { matchLabels: { app: jaeger } }
+  policyTypes: [Ingress]
+  ingress:
+    - from: [{ podSelector: { matchLabels: { app: otel-collector } } }]
+      ports: [{ protocol: TCP, port: 4317 }]
+---
+# The combined broker/controller connects through the Kafka Service, including hairpin NAT.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: dancehub-kafka-controller }
+spec:
+  podSelector: { matchLabels: { app: kafka } }
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from: [{ podSelector: { matchLabels: { app: kafka } } }]
+      ports: [{ protocol: TCP, port: 29093 }]
+  egress:
+    - to: [{ podSelector: { matchLabels: { app: kafka } } }]
+      ports: [{ protocol: TCP, port: 29093 }]
+---
+# FreshClam uses the existing DNS allowance and HTTPS to refresh virus signatures.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: dancehub-clamav-updates-egress }
+spec:
+  podSelector: { matchLabels: { app: clamav } }
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except: [10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 127.0.0.0/8, 169.254.0.0/16]
+      ports: [{ protocol: TCP, port: 443 }]

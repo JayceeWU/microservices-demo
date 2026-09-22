@@ -1,0 +1,76 @@
+{{- if .Values.dancehub.gatewayApi.enabled }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: dancehub-public
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    networking.gke.io/certmap: {{ required "dancehub.gatewayApi.certificateMapName is required" .Values.dancehub.gatewayApi.certificateMapName | quote }}
+spec:
+  gatewayClassName: {{ .Values.dancehub.gatewayApi.className }}
+  addresses:
+    - type: NamedAddress
+      value: {{ required "dancehub.gatewayApi.staticIpName is required" .Values.dancehub.gatewayApi.staticIpName }}
+  listeners:
+    - name: https
+      protocol: HTTPS
+      port: 443
+      tls:
+        mode: Terminate
+      allowedRoutes:
+        namespaces:
+          from: Same
+---
+apiVersion: networking.gke.io/v1
+kind: HealthCheckPolicy
+metadata:
+  name: gatewayservice-health
+  namespace: {{ .Release.Namespace }}
+spec:
+  default:
+    config:
+      type: HTTP
+      httpHealthCheck:
+        port: 8080
+        requestPath: /healthz
+  targetRef:
+    group: ""
+    kind: Service
+    name: gatewayservice
+---
+apiVersion: networking.gke.io/v1
+kind: GCPBackendPolicy
+metadata:
+  name: gatewayservice-websocket-timeout
+  namespace: {{ .Release.Namespace }}
+spec:
+  default:
+    timeoutSec: 3600
+  targetRef:
+    group: ""
+    kind: Service
+    name: gatewayservice
+{{- $routes := dict "student" (dict "host" .Values.dancehub.gatewayApi.hostnames.student "service" "student-web" "port" 3000) "teacher" (dict "host" .Values.dancehub.gatewayApi.hostnames.teacher "service" "teacher-web" "port" 8080) "admin" (dict "host" .Values.dancehub.gatewayApi.hostnames.admin "service" "admin-web" "port" 8080) "api" (dict "host" .Values.dancehub.gatewayApi.hostnames.api "service" "gatewayservice" "port" 8080) }}
+{{- range $name, $route := $routes }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: dancehub-{{ $name }}
+  namespace: {{ $.Release.Namespace }}
+spec:
+  parentRefs:
+    - name: dancehub-public
+      sectionName: https
+  hostnames:
+    - {{ required (printf "hostname for %s is required" $name) $route.host | quote }}
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: {{ $route.service }}
+          port: {{ $route.port }}
+{{- end }}
+{{- end }}

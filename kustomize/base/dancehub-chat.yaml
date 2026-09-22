@@ -1,0 +1,128 @@
+apiVersion: v1
+kind: Service
+metadata: { name: redis-chat }
+spec: { selector: { app: redis-chat }, ports: [{ port: 6379 }] }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: redis-chat }
+spec:
+  selector: { matchLabels: { app: redis-chat } }
+  template:
+    metadata: { labels: { app: redis-chat } }
+    spec:
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          args: [redis-server, --appendonly, 'yes', --maxmemory-policy, allkeys-lru]
+          ports: [{ containerPort: 6379 }]
+          resources: { requests: { cpu: 50m, memory: 64Mi }, limits: { cpu: 500m, memory: 256Mi } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: clamav }
+spec: { selector: { app: clamav }, ports: [{ port: 3310 }] }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: clamav }
+spec:
+  selector: { matchLabels: { app: clamav } }
+  template:
+    metadata: { labels: { app: clamav } }
+    spec:
+      containers:
+        - name: clamav
+          image: clamav/clamav:1.4
+          ports: [{ containerPort: 3310 }]
+          resources: { requests: { cpu: 200m, memory: 1Gi }, limits: { cpu: '2', memory: 3Gi } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: chatservice }
+spec:
+  selector: { app: chatservice }
+  ports: [{ name: grpc, port: 9090 }, { name: health, port: 8080 }]
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: chatservice }
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: chatservice } }
+  template:
+    metadata: { labels: { app: chatservice } }
+    spec:
+      containers:
+        - name: chatservice
+          image: chatservice
+          ports: [{ containerPort: 9090 }, { containerPort: 8080 }]
+          env:
+            - { name: ACCOUNT_SERVICE_ADDR, value: 'accountservice:9090' }
+            - { name: CATALOG_SERVICE_ADDR, value: 'catalogservice:9090' }
+            - { name: CHAT_REDIS_ADDR, value: 'redis-chat:6379' }
+            - { name: OBJECT_STORAGE_ENDPOINT, value: 'minio:9000' }
+            - { name: OBJECT_STORAGE_PUBLIC_ENDPOINT, value: 'localhost:9000' }
+            - { name: OBJECT_STORAGE_SECURE, value: 'false' }
+            - { name: CHAT_MEDIA_BUCKET, value: dancehub-chat }
+            - {
+                name: RABBITMQ_URL,
+                valueFrom: { secretKeyRef: { name: dancehub-secrets, key: rabbitmq-url } },
+              }
+            - {
+                name: DATABASE_URL,
+                valueFrom: { secretKeyRef: { name: dancehub-secrets, key: chat-database-url } },
+              }
+            - {
+                name: CHAT_RELAY_DATABASE_URL,
+                valueFrom:
+                  { secretKeyRef: { name: dancehub-secrets, key: chat-relay-database-url } },
+              }
+            - {
+                name: OBJECT_STORAGE_ACCESS_KEY,
+                valueFrom:
+                  { secretKeyRef: { name: dancehub-secrets, key: object-storage-access-key } },
+              }
+            - {
+                name: OBJECT_STORAGE_SECRET_KEY,
+                valueFrom:
+                  { secretKeyRef: { name: dancehub-secrets, key: object-storage-secret-key } },
+              }
+          readinessProbe: { httpGet: { path: /healthz, port: 8080 } }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: chat-media-worker }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: chat-media-worker } }
+  template:
+    metadata: { labels: { app: chat-media-worker } }
+    spec:
+      containers:
+        - name: chat-media-worker
+          image: chatmediaworker
+          env:
+            - {
+                name: DATABASE_URL,
+                valueFrom:
+                  { secretKeyRef: { name: dancehub-secrets, key: chat-media-database-url } },
+              }
+            - {
+                name: RABBITMQ_URL,
+                valueFrom: { secretKeyRef: { name: dancehub-secrets, key: rabbitmq-url } },
+              }
+            - { name: OBJECT_STORAGE_ENDPOINT, value: 'minio:9000' }
+            - { name: OBJECT_STORAGE_SECURE, value: 'false' }
+            - { name: CHAT_MEDIA_BUCKET, value: dancehub-chat }
+            - { name: CLAMAV_ADDR, value: 'clamav:3310' }
+            - {
+                name: OBJECT_STORAGE_ACCESS_KEY,
+                valueFrom:
+                  { secretKeyRef: { name: dancehub-secrets, key: object-storage-access-key } },
+              }
+            - {
+                name: OBJECT_STORAGE_SECRET_KEY,
+                valueFrom:
+                  { secretKeyRef: { name: dancehub-secrets, key: object-storage-secret-key } },
+              }

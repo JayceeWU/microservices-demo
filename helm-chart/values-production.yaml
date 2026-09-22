@@ -1,0 +1,13 @@
+images:
+  pullPolicy: Always
+
+dancehub:
+  environment: production
+  gatewayApi:
+    enabled: true
+  networkPolicies:
+    enabled: true
+  serviceMesh:
+    enabled: true
+  keda:
+    enabled: true

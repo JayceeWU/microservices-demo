@@ -1,0 +1,95 @@
+{{- if .Values.dancehub.serviceMesh.enabled }}
+{{- $mesh := .Values.dancehub.serviceMesh }}
+apiVersion: {{ $mesh.apiVersion }}
+kind: PeerAuthentication
+metadata:
+  name: dancehub-strict-mtls
+  namespace: {{ .Release.Namespace }}
+spec:
+  mtls:
+    mode: STRICT
+{{- range $name, $service := .Values.dancehub.services }}
+{{- $public := or (default false $service.web) (eq $name "gatewayservice") }}
+{{- $callers := list }}
+{{- if not $public }}
+{{- $callers = required (printf "dancehub.services.%s.allowedCallers is required" $name) $service.allowedCallers }}
+{{- end }}
+{{- if $public }}
+---
+{{- /*
+The Google Cloud load balancer terminates TLS and reaches these pods in plaintext, so the
+public port stays PERMISSIVE while every other port keeps STRICT mTLS.
+*/}}
+apiVersion: {{ $mesh.apiVersion }}
+kind: PeerAuthentication
+metadata:
+  name: {{ $name }}-public-port
+  namespace: {{ $.Release.Namespace }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ $name }}
+  mtls:
+    mode: STRICT
+  portLevelMtls:
+    {{ $service.port }}:
+      mode: PERMISSIVE
+{{- end }}
+---
+apiVersion: {{ $mesh.apiVersion }}
+kind: AuthorizationPolicy
+metadata:
+  name: {{ $name }}-callers
+  namespace: {{ $.Release.Namespace }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ $name }}
+  action: ALLOW
+  rules:
+    {{- if $public }}
+    - to:
+        - operation:
+            ports: [{{ $service.port | quote }}]
+    {{- else }}
+    - from:
+        - source:
+            principals:
+              {{- range $caller := $callers }}
+              {{- /* validates the caller name; the definition itself is not needed here */}}
+              {{- $_ := include "dancehub.callerDefinition" (dict "root" $ "name" $name "caller" $caller) }}
+              - {{ include "dancehub.meshPrincipal" (dict "root" $ "name" $caller) | quote }}
+              {{- end }}
+      to:
+        - operation:
+            ports: [{{ $service.port | quote }}]
+    {{- range $caller, $paths := $service.httpCallers }}
+    - from:
+        - source:
+            principals:
+              - {{ include "dancehub.meshPrincipal" (dict "root" $ "name" $caller) | quote }}
+      to:
+        - operation:
+            ports: [{{ default $service.port $service.healthPort | quote }}]
+            paths:
+              {{- range $path := $paths }}
+              - {{ $path | quote }}
+              {{- end }}
+    {{- end }}
+    {{- end }}
+{{- end }}
+{{- range $name, $_ := .Values.dancehub.workers }}
+---
+{{- /* Workers only consume queues and topics; nothing in the mesh may call them. */}}
+apiVersion: {{ $mesh.apiVersion }}
+kind: AuthorizationPolicy
+metadata:
+  name: {{ $name }}-deny-all
+  namespace: {{ $.Release.Namespace }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ $name }}
+  action: ALLOW
+{{- end }}
+{{- end }}

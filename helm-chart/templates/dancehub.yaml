@@ -1,0 +1,345 @@
+{{- range $name, $service := .Values.dancehub.services }}
+{{- $probePath := ternary "/" "/healthz" (default false $service.web) }}
+{{- $healthPort := default $service.port $service.healthPort }}
+{{- $usesGrpcOtel := or (default false $service.dotnet) (default false $service.otelGrpc) }}
+{{- $otelEndpoint := ternary $.Values.dancehub.config.otelGrpcEndpoint $.Values.dancehub.config.otelHttpEndpoint $usesGrpcOtel }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ $name }}
+    app.kubernetes.io/part-of: bay-area-dance-hub
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: {{ $name }}
+  ports:
+    {{- if $service.grpc }}
+    - name: grpc
+      port: {{ $service.port }}
+      targetPort: grpc
+    - name: http
+      port: {{ $healthPort }}
+      targetPort: http
+    {{- else }}
+    - name: http
+      port: {{ $service.port }}
+      targetPort: http
+    {{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ $name }}
+    app.kubernetes.io/part-of: bay-area-dance-hub
+spec:
+  replicas: {{ $service.replicas }}
+  {{- with $service.strategy }}
+  strategy:
+    type: {{ . }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ $name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ $name }}
+        app.kubernetes.io/part-of: bay-area-dance-hub
+        {{- include "dancehub.meshPodLabels" (dict "root" $ "inject" true) | nindent 8 }}
+    spec:
+      serviceAccountName: {{ $name }}
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: {{ default 65532 $service.runAsUser }}
+        runAsGroup: {{ default 65532 $service.runAsGroup }}
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: {{ $name }}
+          image: {{ include "dancehub.image" (dict "root" $ "name" $service.image) }}
+          imagePullPolicy: {{ $.Values.images.pullPolicy }}
+          ports:
+            {{- if $service.grpc }}
+            - name: grpc
+              containerPort: {{ $service.port }}
+            - name: http
+              containerPort: {{ $healthPort }}
+            {{- else }}
+            - name: http
+              containerPort: {{ $service.port }}
+            {{- end }}
+          env:
+            - name: ENVIRONMENT
+              value: {{ $.Values.dancehub.environment | quote }}
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: {{ $otelEndpoint | quote }}
+            - name: OTEL_SERVICE_NAMESPACE
+              value: bay-area-dance-hub
+            {{- if $service.databaseSecretKey }}
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.dancehub.existingSecret }}
+                  key: {{ $service.databaseSecretKey }}
+            {{- end }}
+            {{- if and $.Values.dancehub.serviceMesh.enabled $service.grpc }}
+            - name: MESH_PEER_ENFORCEMENT
+              value: "true"
+            - name: MESH_TRUST_DOMAIN
+              value: {{ $.Values.dancehub.serviceMesh.trustDomain | quote }}
+            - name: MESH_NAMESPACE
+              value: {{ $.Release.Namespace | quote }}
+            - name: MESH_ALLOWED_PEERS
+              value: {{ include "dancehub.meshPeers" (dict "root" $ "name" $name "callers" (required (printf "dancehub.services.%s.allowedCallers is required" $name) $service.allowedCallers)) | quote }}
+            {{- end }}
+            {{- if $service.kafka }}
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: {{ $.Values.dancehub.config.kafkaBootstrapServers | quote }}
+            {{- end }}
+            {{- if $service.rabbitmq }}
+            - name: RABBITMQ_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.dancehub.existingSecret }}
+                  key: rabbitmq-url
+            {{- end }}
+            {{- if eq $name "gatewayservice" }}
+            - name: OIDC_ISSUER
+              value: {{ $.Values.dancehub.config.oidcIssuer | quote }}
+            - name: OIDC_JWKS_URL
+              value: {{ $.Values.dancehub.config.oidcJwksUrl | quote }}
+            - name: OIDC_AUDIENCE
+              value: {{ $.Values.dancehub.config.oidcAudience | quote }}
+            - name: OTEL_COLLECTOR_HTTP_URL
+              value: {{ $.Values.dancehub.config.otelHttpEndpoint | quote }}
+            - name: WEB_ORIGINS
+              value: {{ printf "https://%s,https://%s,https://%s" $.Values.dancehub.gatewayApi.hostnames.student $.Values.dancehub.gatewayApi.hostnames.teacher $.Values.dancehub.gatewayApi.hostnames.admin | quote }}
+            {{- end }}
+            {{- if eq $name "orderservice" }}
+            - name: FLASHSALE_REDIS_ADDR
+              value: {{ $.Values.dancehub.config.flashSaleRedisAddress | quote }}
+            {{- end }}
+            {{- if eq $name "cartservice" }}
+            - name: REDIS_ADDR
+              value: {{ $.Values.dancehub.config.cartRedisAddress | quote }}
+            {{- end }}
+            {{- if eq $name "chatservice" }}
+            - name: CHAT_REDIS_ADDR
+              value: {{ $.Values.dancehub.config.chatRedisAddress | quote }}
+            - name: OBJECT_STORAGE_ENDPOINT
+              value: {{ $.Values.dancehub.config.objectStorageEndpoint | quote }}
+            - name: OBJECT_STORAGE_PUBLIC_ENDPOINT
+              value: {{ $.Values.dancehub.config.objectStoragePublicEndpoint | quote }}
+            - name: OBJECT_STORAGE_SECURE
+              value: {{ $.Values.dancehub.config.objectStorageSecure | quote }}
+            - name: CHAT_MEDIA_BUCKET
+              value: {{ $.Values.dancehub.config.objectStorageBucket | quote }}
+            {{- end }}
+            {{- if $service.web }}
+            - name: DANCEHUB_API_URL
+              value: {{ $.Values.dancehub.config.publicApiUrl | quote }}
+            - name: DANCEHUB_OIDC_ISSUER
+              value: {{ $.Values.dancehub.config.oidcIssuer | quote }}
+            - name: DANCEHUB_AUTH_MODE
+              value: oidc
+            - name: DANCEHUB_ENVIRONMENT
+              value: {{ $.Values.dancehub.environment | quote }}
+            {{- end }}
+            {{- if eq $name "student-web" }}
+            - name: AUTH_URL
+              value: {{ printf "https://%s" $.Values.dancehub.gatewayApi.hostnames.student | quote }}
+            - name: KEYCLOAK_PUBLIC_URL
+              value: {{ $.Values.dancehub.config.oidcIssuer | quote }}
+            - name: KEYCLOAK_INTERNAL_URL
+              value: {{ $.Values.dancehub.config.oidcIssuer | quote }}
+            {{- end }}
+            {{- range $key, $value := $service.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- range $key, $secretKey := $service.secretEnv }}
+            - name: {{ $key }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.dancehub.existingSecret }}
+                  key: {{ $secretKey }}
+            {{- end }}
+          readinessProbe:
+            httpGet:
+              path: {{ $probePath }}
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          startupProbe:
+            httpGet:
+              path: {{ $probePath }}
+              port: http
+            periodSeconds: 2
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: {{ $probePath }}
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 15
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            {{- if eq $name "student-web" }}
+            - name: next-cache
+              mountPath: /app/apps/student-web/.next/cache
+            {{- end }}
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 64Mi
+        {{- if eq $name "student-web" }}
+        - name: next-cache
+          emptyDir:
+            sizeLimit: 128Mi
+        {{- end }}
+{{- end }}
+
+{{- range $name, $worker := .Values.dancehub.workers }}
+{{- $otelEndpoint := ternary $.Values.dancehub.config.otelGrpcEndpoint $.Values.dancehub.config.otelHttpEndpoint (default false $worker.otelGrpc) }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ $name }}
+    app.kubernetes.io/part-of: bay-area-dance-hub
+spec:
+  replicas: {{ $worker.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ $name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ $name }}
+        app.kubernetes.io/part-of: bay-area-dance-hub
+        {{- include "dancehub.meshPodLabels" (dict "root" $ "inject" true) | nindent 8 }}
+    spec:
+      serviceAccountName: {{ $name }}
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: {{ default 65532 $worker.runAsUser }}
+        runAsGroup: {{ default 65532 $worker.runAsGroup }}
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: {{ $name }}
+          image: {{ include "dancehub.image" (dict "root" $ "name" $worker.image) }}
+          imagePullPolicy: {{ $.Values.images.pullPolicy }}
+          {{- if $worker.script }}
+          args: [{{ $worker.script | quote }}]
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: ENVIRONMENT
+              value: {{ $.Values.dancehub.environment | quote }}
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: {{ $otelEndpoint | quote }}
+            - name: OTEL_SERVICE_NAMESPACE
+              value: bay-area-dance-hub
+            {{- if $worker.databaseSecretKey }}
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.dancehub.existingSecret }}
+                  key: {{ $worker.databaseSecretKey }}
+            {{- end }}
+            {{- if $worker.kafka }}
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: {{ $.Values.dancehub.config.kafkaBootstrapServers | quote }}
+            {{- end }}
+            {{- if $worker.rabbitmq }}
+            - name: RABBITMQ_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.dancehub.existingSecret }}
+                  key: rabbitmq-url
+            {{- end }}
+            {{- if eq $name "chat-media-worker" }}
+            - name: OBJECT_STORAGE_ENDPOINT
+              value: {{ $.Values.dancehub.config.objectStorageEndpoint | quote }}
+            - name: OBJECT_STORAGE_SECURE
+              value: {{ $.Values.dancehub.config.objectStorageSecure | quote }}
+            - name: CHAT_MEDIA_BUCKET
+              value: {{ $.Values.dancehub.config.objectStorageBucket | quote }}
+            - name: CLAMAV_ADDR
+              value: {{ $.Values.dancehub.config.clamavAddress | quote }}
+            {{- end }}
+            {{- range $key, $value := $worker.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- range $key, $secretKey := $worker.secretEnv }}
+            - name: {{ $key }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.dancehub.existingSecret }}
+                  key: {{ $secretKey }}
+            {{- end }}
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 5
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 2
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 15
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+          resources:
+            requests:
+              cpu: 50m
+              memory: 96Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 64Mi
+{{- end }}

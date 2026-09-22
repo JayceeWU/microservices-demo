@@ -1,220 +1,268 @@
-# Copyright 2024 Google LLC
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#      https://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-# Default values for onlineboutique.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
 images:
-  repository: us-central1-docker.pkg.dev/online-boutique-ci/microservices-demo
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  repository: example.invalid/bay-area-dance-hub
+  tag: development
+  pullPolicy: IfNotPresent
 
-serviceAccounts:
-  # Specifies whether service accounts should be created.
-  create: true
-  # Annotations to add to the service accounts.
-  annotations: {}
-  # Annotations to add only for the cartservice app. This allows to follow the least privilege principle where only cartservice needs to connect to external database for example via Workload Identity.
-  annotationsOnlyForCartservice: false
+dancehub:
+  environment: production
+  existingSecret: dancehub-secrets
+  migrationImage: dancehub-migrations
 
-networkPolicies:
-  # Specifies if the NetworkPolicies are created or not. If true, one fine granular NetworkPolicy per app is created.
-  create: false
+  config:
+    kafkaBootstrapServers: kafka.example.internal:9092
+    cartRedisAddress: redis-cart.example.internal:6379
+    flashSaleRedisAddress: redis-flashsale.example.internal:6379
+    chatRedisAddress: redis-chat.example.internal:6379
+    oidcIssuer: https://identity.example.com/realms/bay-area-dance-hub
+    oidcJwksUrl: https://identity.example.com/realms/bay-area-dance-hub/protocol/openid-connect/certs
+    oidcAudience: gateway
+    otelHttpEndpoint: http://otel-collector.observability.svc.cluster.local:4318
+    otelGrpcEndpoint: http://otel-collector.observability.svc.cluster.local:4317
+    objectStorageEndpoint: storage.googleapis.com
+    objectStoragePublicEndpoint: storage.googleapis.com
+    objectStorageBucket: bay-area-dance-hub-production
+    objectStorageSecure: 'true'
+    clamavAddress: clamav.security.svc.cluster.local:3310
+    publicApiUrl: https://api.example.com
 
-sidecars:
-  # Specifies if the Sidecars are created or not. If true, one fine granular Sidecar per app is created.
-  create: false
+  gatewayApi:
+    enabled: false
+    className: gke-l7-global-external-managed
+    staticIpName: dancehub-production
+    certificateMapName: dancehub-production
+    hostnames:
+      student: dance.example.com
+      teacher: teacher.dance.example.com
+      admin: admin.dance.example.com
+      api: api.dance.example.com
 
-authorizationPolicies:
-  # Specifies if the AuthorizationPolicies are created or not. If true, one fine granular AuthorizationPolicy per app is created.
-  create: false
+  networkPolicies:
+    enabled: false
 
-opentelemetryCollector:
-  create: false
-  name: opentelemetrycollector
-  # Specifies the project id for the otel collector. If set as "PROJECT_ID" (default value), an initContainer will automatically retrieve the project id value from the metadata server.
-  projectId: "PROJECT_ID"
+  # Workload identity through the service mesh (Istio / Cloud Service Mesh): every Deployment
+  # gets its own ServiceAccount, the namespace runs STRICT mTLS, `allowedCallers` renders an
+  # AuthorizationPolicy per service, and the services bind asserted identity metadata to the
+  # peer certificate (MESH_* environment). Requires the mesh CRDs and sidecar injection.
+  serviceMesh:
+    enabled: false
+    apiVersion: security.istio.io/v1
+    # cluster.local for self-managed Istio; Cloud Service Mesh uses <PROJECT_ID>.svc.id.goog
+    trustDomain: cluster.local
+    # istio.io/rev label for revision-based injection (for example asm-managed); empty for default
+    revision: ''
 
-googleCloudOperations:
-  profiler: false
-  tracing: false
-  metrics: false
+  keda:
+    enabled: false
+    rabbitHostSecretKey: rabbitmq-url
+    queueName: flashsale.purchase-request.q
+    queueLength: '20'
+    maxReplicas: 30
 
-seccompProfile:
-  enable: false
-  type: RuntimeDefault
+  migrationSecretEnv:
+    DATABASE_ADMIN_URL: database-admin-url
+    DATABASE_URL: migrator-database-url
+    DATABASE_MIGRATOR_PASSWORD: database-migrator-password
+    ACCOUNT_DB_PASSWORD: account-db-password
+    CATALOG_DB_PASSWORD: catalog-db-password
+    SCHEDULING_DB_PASSWORD: scheduling-db-password
+    CREDIT_DB_PASSWORD: credit-db-password
+    ORDERS_DB_PASSWORD: orders-db-password
+    PAYMENT_DB_PASSWORD: payment-db-password
+    PAYROLL_DB_PASSWORD: payroll-db-password
+    RECOMMENDATION_DB_PASSWORD: recommendation-db-password
+    OUTBOX_DB_PASSWORD: outbox-db-password
+    PROJECTION_DB_PASSWORD: projection-db-password
+    KEYCLOAK_DB_PASSWORD: keycloak-db-password
+    CHAT_DB_PASSWORD: chat-db-password
+    CHAT_RELAY_DB_PASSWORD: chat-relay-db-password
+    CHAT_MEDIA_DB_PASSWORD: chat-media-db-password
 
-securityContext:
-  enable: true
+  services:
+    gatewayservice:
+      image: gatewayservice
+      replicas: 2
+      port: 8080
+      env:
+        AUTH_MODE: oidc
+        ACCOUNT_SERVICE_ADDR: accountservice:9090
+        CATALOG_SERVICE_ADDR: catalogservice:9090
+        SCHEDULING_SERVICE_ADDR: schedulingservice:9090
+        ORDER_SERVICE_ADDR: orderservice:9090
+        PAYROLL_SERVICE_ADDR: payrollservice:9090
+        PAYMENT_SERVICE_ADDR: paymentservice:9090
+        PAYMENT_WEBHOOK_URL: http://paymentservice:8080/webhooks/stripe
+        CREDIT_SERVICE_ADDR: creditservice:9090
+        CART_SERVICE_ADDR: cartservice:9090
+        RECOMMENDATION_SERVICE_ADDR: recommendationservice:9090
+        CHAT_SERVICE_ADDR: chatservice:9090
+    accountservice:
+      image: accountservice
+      replicas: 2
+      port: 9090
+      healthPort: 8080
+      grpc: true
+      databaseSecretKey: account-database-url
+      allowedCallers: [gatewayservice, chatservice]
+    catalogservice:
+      image: catalogservice
+      replicas: 2
+      port: 9090
+      healthPort: 8080
+      grpc: true
+      databaseSecretKey: catalog-database-url
+      allowedCallers: [gatewayservice, schedulingservice, orderservice, chatservice]
+    creditservice:
+      image: creditservice
+      replicas: 2
+      port: 9090
+      healthPort: 8080
+      grpc: true
+      dotnet: true
+      runAsUser: 1654
+      runAsGroup: 1654
+      databaseSecretKey: credit-database-url
+      allowedCallers: [gatewayservice, schedulingservice, orderservice]
+    schedulingservice:
+      image: schedulingservice
+      replicas: 2
+      port: 9090
+      healthPort: 8080
+      grpc: true
+      # service principals this workload asserts on outgoing calls (bound to its ServiceAccount)
+      servicePrincipals: [scheduling-worker]
+      databaseSecretKey: scheduling-database-url
+      env:
+        CREDIT_SERVICE_ADDR: creditservice:9090
+        CATALOG_SERVICE_ADDR: catalogservice:9090
+      allowedCallers: [gatewayservice, orderservice]
+    orderservice:
+      image: orderservice
+      replicas: 2
+      port: 9090
+      healthPort: 8080
+      grpc: true
+      servicePrincipals: [orderservice]
+      databaseSecretKey: orders-database-url
+      rabbitmq: true
+      env:
+        CREDIT_SERVICE_ADDR: creditservice:9090
+        SCHEDULING_SERVICE_ADDR: schedulingservice:9090
+        CATALOG_SERVICE_ADDR: catalogservice:9090
+        PAYMENT_SERVICE_ADDR: paymentservice:9090
+      allowedCallers: [gatewayservice, payment-order-saga]
+    paymentservice:
+      image: paymentservice
+      replicas: 2
+      port: 9090
+      healthPort: 8080
+      grpc: true
+      databaseSecretKey: payment-database-url
+      strategy: Recreate
+      env:
+        PAYMENT_MODE: stripe
+      secretEnv:
+        STRIPE_SECRET_KEY: stripe-secret-key
+        STRIPE_WEBHOOK_SECRET: stripe-webhook-secret
+      allowedCallers: [gatewayservice, orderservice]
+      # plain HTTP endpoints on the health port reachable by internal callers
+      httpCallers:
+        gatewayservice: [/webhooks/stripe]
+    payrollservice:
+      image: payrollservice
+      replicas: 2
+      port: 9090
+      healthPort: 8080
+      grpc: true
+      databaseSecretKey: payroll-database-url
+      kafka: true
+      allowedCallers: [gatewayservice]
+    cartservice:
+      image: cartservice
+      replicas: 2
+      port: 9090
+      healthPort: 8080
+      grpc: true
+      dotnet: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      allowedCallers: [gatewayservice]
+    recommendationservice:
+      image: recommendationservice
+      replicas: 2
+      port: 9090
+      healthPort: 8080
+      grpc: true
+      kafka: true
+      otelGrpc: true
+      databaseSecretKey: recommendation-database-url
+      allowedCallers: [gatewayservice]
+    chatservice:
+      image: chatservice
+      replicas: 2
+      port: 9090
+      healthPort: 8080
+      grpc: true
+      databaseSecretKey: chat-database-url
+      rabbitmq: true
+      secretEnv:
+        CHAT_RELAY_DATABASE_URL: chat-relay-database-url
+        OBJECT_STORAGE_ACCESS_KEY: object-storage-access-key
+        OBJECT_STORAGE_SECRET_KEY: object-storage-secret-key
+      env:
+        ACCOUNT_SERVICE_ADDR: accountservice:9090
+        CATALOG_SERVICE_ADDR: catalogservice:9090
+      allowedCallers: [gatewayservice]
+    student-web:
+      image: student-web
+      replicas: 2
+      port: 3000
+      web: true
+      runAsUser: 1000
+      runAsGroup: 1000
+      secretEnv:
+        AUTH_SECRET: auth-secret
+        AUTH_KEYCLOAK_SECRET: auth-keycloak-secret
+      env:
+        AUTH_KEYCLOAK_ID: student-web
+    teacher-web:
+      image: teacher-web
+      replicas: 2
+      port: 8080
+      web: true
+      staticWeb: true
+      runAsUser: 101
+      runAsGroup: 101
+    admin-web:
+      image: admin-web
+      replicas: 2
+      port: 8080
+      web: true
+      staticWeb: true
+      runAsUser: 101
+      runAsGroup: 101
 
-adService:
-  create: true
-  name: adservice
-  resources:
-    requests:
-      cpu: 200m
-      memory: 180Mi
-    limits:
-      cpu: 300m
-      memory: 300Mi
-
-cartService:
-  create: true
-  name: cartservice
-  resources:
-    requests:
-      cpu: 200m
-      memory: 128Mi
-    limits:
-      cpu: 300m
-      memory: 256Mi
-
-checkoutService:
-  create: true
-  name: checkoutservice
-  resources:
-    requests:
-      cpu: 100m
-      memory: 64Mi
-    limits:
-      cpu: 200m
-      memory: 128Mi
-
-currencyService:
-  create: true
-  name: currencyservice
-  resources:
-    requests:
-      cpu: 100m
-      memory: 128Mi
-    limits:
-      cpu: 200m
-      memory: 256Mi
-
-emailService:
-  create: true
-  name: emailservice
-  resources:
-    requests:
-      cpu: 100m
-      memory: 64Mi
-    limits:
-      cpu: 200m
-      memory: 128Mi
-
-frontend:
-  create: true
-  name: frontend
-  externalService: true
-  cymbalBranding: false
-  # One of: local, gcp, aws, azure, onprem, alibaba. When not set, defaults to "local" unless running in GKE, otherwise auto-sets to gcp.
-  platform: local
-  singleSharedSession: false
-  virtualService:
-    create: false
-    hosts:
-    - "*"
-    gateway:
-      name: asm-ingressgateway
-      namespace: asm-ingress
-      labelKey: asm
-      labelValue: ingressgateway
-  resources:
-    requests:
-      cpu: 100m
-      memory: 64Mi
-    limits:
-      cpu: 200m
-      memory: 128Mi
-
-loadGenerator:
-  create: true
-  name: loadgenerator
-  checkFrontendInitContainer: true
-  resources:
-    requests:
-      cpu: 300m
-      memory: 256Mi
-    limits:
-      cpu: 500m
-      memory: 512Mi
-
-paymentService:
-  create: true
-  name: paymentservice
-  resources:
-    requests:
-      cpu: 100m
-      memory: 128Mi
-    limits:
-      cpu: 200m
-      memory: 256Mi
-
-productCatalogService:
-  create: true
-  name: productcatalogservice
-  # Specifies an extra latency to any request on productcatalogservice, by default no extra latency.
-  extraLatency: ""
-  resources:
-    requests:
-      cpu: 100m
-      memory: 64Mi
-    limits:
-      cpu: 200m
-      memory: 128Mi
-
-recommendationService:
-  create: true
-  name: recommendationservice
-  resources:
-    requests:
-      cpu: 100m
-      memory: 220Mi
-    limits:
-      cpu: 200m
-      memory: 450Mi
-
-shippingService:
-  create: true
-  name: shippingservice
-  resources:
-    requests:
-      cpu: 100m
-      memory: 64Mi
-    limits:
-      cpu: 200m
-      memory: 128Mi
-
-cartDatabase:
-  # Specifies the type of the cartservice's database, could be either redis or spanner.
-  type: redis
-  connectionString: "redis-cart:6379"
-  inClusterRedis:
-    create: true
-    name: redis-cart
-    # Uses the public redis image from Docker Hub, otherwise will use the images.repository.
-    publicRepository: true
-  externalRedisTlsOrigination:
-    enable: false
-    name: exernal-redis-tls-origination
-    endpointAddress: ""
-    endpointPort: ""
-    certificate: ""
-
-# @TODO: This service is not currently available in Helm.
-# https://github.com/GoogleCloudPlatform/microservices-demo/tree/main/kustomize/components/shopping-assistant
-shoppingAssistantService:
-  create: false
-  name: shoppingassistantservice
+  workers:
+    outbox-relay:
+      image: outbox-relay
+      script: relay.py
+      replicas: 2
+      databaseSecretKey: outbox-database-url
+      kafka: true
+      otelGrpc: true
+    payment-order-saga:
+      image: outbox-relay
+      script: saga.py
+      replicas: 2
+      servicePrincipals: [payment-order-saga]
+      kafka: true
+      otelGrpc: true
+      env:
+        ORDER_SERVICE_ADDR: orderservice:9090
+    chat-media-worker:
+      image: chatmediaworker
+      replicas: 2
+      databaseSecretKey: chat-media-database-url
+      rabbitmq: true
+      secretEnv:
+        OBJECT_STORAGE_ACCESS_KEY: object-storage-access-key
+        OBJECT_STORAGE_SECRET_KEY: object-storage-secret-key

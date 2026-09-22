@@ -1,0 +1,52 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-migrations-{{ .Release.Revision }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    {{- /* Runs after the dancehub-migrations ServiceAccount hook (weight -5). */}}
+    helm.sh/hook-weight: '0'
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: dancehub-migrations
+        {{- /* A sidecar would keep the Job from completing; the database is outside the mesh anyway. */}}
+        {{- include "dancehub.meshPodLabels" (dict "root" . "inject" false) | nindent 8 }}
+    spec:
+      serviceAccountName: dancehub-migrations
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: migrations
+          image: {{ include "dancehub.image" (dict "root" . "name" .Values.dancehub.migrationImage) }}
+          imagePullPolicy: {{ .Values.images.pullPolicy }}
+          env:
+            {{- range $name, $key := .Values.dancehub.migrationSecretEnv }}
+            - name: {{ $name }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.dancehub.existingSecret }}
+                  key: {{ $key }}
+            {{- end }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 64Mi

@@ -1,0 +1,154 @@
+apiVersion: v1
+kind: Service
+metadata: { name: student-web }
+spec: { selector: { app: student-web }, ports: [{ port: 80, targetPort: 3000 }] }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: student-web }
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: student-web } }
+  template:
+    metadata: { labels: { app: student-web } }
+    spec:
+      containers:
+        - name: student-web
+          image: student-web
+          ports: [{ containerPort: 3000 }]
+          env:
+            - { name: DANCEHUB_API_URL, value: 'http://localhost:8080' }
+            - {
+                name: DANCEHUB_OIDC_ISSUER,
+                value: 'http://localhost:8081/realms/bay-area-dance-hub',
+              }
+            - { name: DANCEHUB_AUTH_MODE, value: oidc }
+            - { name: DANCEHUB_ENVIRONMENT, value: local }
+            - { name: AUTH_URL, value: 'http://localhost:3000' }
+            - name: AUTH_SECRET
+              valueFrom: { secretKeyRef: { name: dancehub-secrets, key: auth-secret } }
+            - { name: AUTH_KEYCLOAK_ID, value: student-web }
+            - name: AUTH_KEYCLOAK_SECRET
+              valueFrom: { secretKeyRef: { name: dancehub-secrets, key: auth-keycloak-secret } }
+            - {
+                name: KEYCLOAK_PUBLIC_URL,
+                value: 'http://localhost:8081/realms/bay-area-dance-hub',
+              }
+            - {
+                name: KEYCLOAK_INTERNAL_URL,
+                value: 'http://keycloak:8080/realms/bay-area-dance-hub',
+              }
+          readinessProbe: { httpGet: { path: /, port: 3000 } }
+          resources: { requests: { cpu: 50m, memory: 128Mi }, limits: { cpu: 500m, memory: 512Mi } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: teacher-web }
+spec: { selector: { app: teacher-web }, ports: [{ port: 80, targetPort: 8080 }] }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: teacher-web }
+spec:
+  selector: { matchLabels: { app: teacher-web } }
+  template:
+    metadata: { labels: { app: teacher-web } }
+    spec:
+      containers:
+        - name: teacher-web
+          image: teacher-web
+          ports: [{ containerPort: 8080 }]
+          env:
+            - { name: DANCEHUB_API_URL, value: 'http://localhost:8080' }
+            - {
+                name: DANCEHUB_OIDC_ISSUER,
+                value: 'http://localhost:8081/realms/bay-area-dance-hub',
+              }
+            - { name: DANCEHUB_AUTH_MODE, value: oidc }
+            - { name: DANCEHUB_ENVIRONMENT, value: local }
+          readinessProbe: { httpGet: { path: /, port: 8080 } }
+          resources: { requests: { cpu: 25m, memory: 32Mi }, limits: { cpu: 200m, memory: 128Mi } }
+---
+apiVersion: v1
+kind: Service
+metadata: { name: admin-web }
+spec: { selector: { app: admin-web }, ports: [{ port: 80, targetPort: 8080 }] }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: admin-web }
+spec:
+  selector: { matchLabels: { app: admin-web } }
+  template:
+    metadata: { labels: { app: admin-web } }
+    spec:
+      containers:
+        - name: admin-web
+          image: admin-web
+          ports: [{ containerPort: 8080 }]
+          env:
+            - { name: DANCEHUB_API_URL, value: 'http://localhost:8080' }
+            - {
+                name: DANCEHUB_OIDC_ISSUER,
+                value: 'http://localhost:8081/realms/bay-area-dance-hub',
+              }
+            - { name: DANCEHUB_AUTH_MODE, value: oidc }
+            - { name: DANCEHUB_ENVIRONMENT, value: local }
+          readinessProbe: { httpGet: { path: /, port: 8080 } }
+          resources: { requests: { cpu: 25m, memory: 32Mi }, limits: { cpu: 200m, memory: 128Mi } }
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: dancehub
+  annotations: { nginx.ingress.kubernetes.io/ssl-redirect: 'true' }
+spec:
+  rules:
+    - host: app.bayareadancehub.com
+      http:
+        {
+          paths:
+            [
+              {
+                path: /,
+                pathType: Prefix,
+                backend: { service: { name: student-web, port: { number: 80 } } },
+              },
+            ],
+        }
+    - host: teacher.bayareadancehub.com
+      http:
+        {
+          paths:
+            [
+              {
+                path: /,
+                pathType: Prefix,
+                backend: { service: { name: teacher-web, port: { number: 80 } } },
+              },
+            ],
+        }
+    - host: admin.bayareadancehub.com
+      http:
+        {
+          paths:
+            [
+              {
+                path: /,
+                pathType: Prefix,
+                backend: { service: { name: admin-web, port: { number: 80 } } },
+              },
+            ],
+        }
+    - host: api.bayareadancehub.com
+      http:
+        {
+          paths:
+            [
+              {
+                path: /,
+                pathType: Prefix,
+                backend: { service: { name: gatewayservice, port: { number: 80 } } },
+              },
+            ],
+        }

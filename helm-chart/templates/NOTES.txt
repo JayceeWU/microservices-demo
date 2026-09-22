@@ -1,15 +1,12 @@
-{{- if and .Values.frontend.create .Values.frontend.externalService }}
-Note: It may take a few minutes for the LoadBalancer IP to be available.
+BayAreaDanceHub was installed in namespace {{ .Release.Namespace }}.
+{{- if .Values.dancehub.gatewayApi.enabled }}
 
-Watch the status of the frontend IP address with:
-    kubectl get --namespace {{ .Release.Namespace }} svc -w {{ .Values.frontend.name }}-external
+GKE Gateway status:
+  kubectl get gateway dancehub-public -n {{ .Release.Namespace }}
 
-Get the external IP address of the frontend:
-    export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ .Values.frontend.name }}-external --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
-    echo http://$SERVICE_IP
-{{- end }}
-{{- if .Values.frontend.virtualService.create }}
-Get the external IP address of the ingress gateway:
-    export SERVICE_IP=$(kubectl get svc --namespace {{ .Values.frontend.virtualService.gateway.namespace }} {{ .Values.frontend.virtualService.gateway.name }} --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
-    echo http://$SERVICE_IP
+Public hosts:
+  Student: https://{{ .Values.dancehub.gatewayApi.hostnames.student }}
+  Teacher: https://{{ .Values.dancehub.gatewayApi.hostnames.teacher }}
+  Admin:   https://{{ .Values.dancehub.gatewayApi.hostnames.admin }}
+  API:     https://{{ .Values.dancehub.gatewayApi.hostnames.api }}
 {{- end }}

@@ -1,0 +1,59 @@
+{{- if .Values.dancehub.networkPolicies.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: dancehub-default-deny-ingress
+  namespace: {{ .Release.Namespace }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/part-of: bay-area-dance-hub
+  policyTypes: [Ingress]
+{{- range $name, $service := .Values.dancehub.services }}
+{{- $healthPort := default $service.port $service.healthPort }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $name }}-ingress
+  namespace: {{ $.Release.Namespace }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: {{ $name }}
+  policyTypes: [Ingress]
+  ingress:
+    {{- if $service.web }}
+    - from:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: {{ $service.port }}
+    {{- else if eq $name "gatewayservice" }}
+    - from:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: {{ $service.port }}
+    {{- else }}
+    {{- /* An empty `from` would admit every pod, so a missing allow-list fails the render. */}}
+    - from:
+        {{- range $caller := required (printf "dancehub.services.%s.allowedCallers is required" $name) $service.allowedCallers }}
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: {{ $caller }}
+        {{- end }}
+      ports:
+        - protocol: TCP
+          port: {{ $service.port }}
+    - from:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: {{ $healthPort }}
+    {{- end }}
+{{- end }}
+{{- end }}
