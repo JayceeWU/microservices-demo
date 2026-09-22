@@ -1,0 +1,200 @@
+name: Deploy BayAreaDanceHub to GKE production
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref to deploy
+        required: true
+        default: main
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: dancehub-gke-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build and deploy approved revision
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    environment: gke-production
+    env:
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      GCP_REGION: ${{ vars.GCP_REGION }}
+      GKE_CLUSTER: ${{ vars.GKE_CLUSTER }}
+      ARTIFACT_REGISTRY_REPOSITORY: ${{ vars.ARTIFACT_REGISTRY_REPOSITORY }}
+      K8S_NAMESPACE: ${{ vars.K8S_NAMESPACE }}
+      KEDA_ENABLED: ${{ vars.KEDA_ENABLED || 'true' }}
+      SERVICE_MESH_ENABLED: ${{ vars.SERVICE_MESH_ENABLED || 'true' }}
+      SERVICE_MESH_TRUST_DOMAIN: ${{ vars.SERVICE_MESH_TRUST_DOMAIN || 'cluster.local' }}
+      SERVICE_MESH_REVISION: ${{ vars.SERVICE_MESH_REVISION }}
+      OBJECT_STORAGE_PUBLIC_ENDPOINT: ${{ vars.OBJECT_STORAGE_PUBLIC_ENDPOINT }}
+      CLAMAV_ADDRESS: ${{ vars.CLAMAV_ADDRESS }}
+    steps:
+      - name: Check out selected revision
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Resolve immutable deployment revision
+        shell: bash
+        run: echo "DEPLOY_SHA=$(git rev-parse HEAD)" >> "$GITHUB_ENV"
+
+      - name: Authenticate to Google Cloud with Workload Identity Federation
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SERVICE_ACCOUNT }}
+
+      - name: Install Google Cloud SDK and Skaffold
+        uses: google-github-actions/setup-gcloud@v3
+        with:
+          install_components: gke-gcloud-auth-plugin,skaffold
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v3
+        with:
+          cluster_name: ${{ env.GKE_CLUSTER }}
+          location: ${{ env.GCP_REGION }}
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.18.6
+
+      - name: Validate production prerequisites
+        env:
+          REQUIRED_SECRET_KEYS: >-
+            database-admin-url migrator-database-url database-migrator-password
+            account-db-password catalog-db-password scheduling-db-password credit-db-password
+            orders-db-password payment-db-password payroll-db-password recommendation-db-password
+            outbox-db-password projection-db-password keycloak-db-password
+            chat-db-password chat-relay-db-password chat-media-db-password
+            account-database-url catalog-database-url scheduling-database-url credit-database-url
+            orders-database-url payment-database-url payroll-database-url recommendation-database-url
+            outbox-database-url chat-database-url chat-relay-database-url
+            chat-media-database-url rabbitmq-url stripe-secret-key
+            stripe-webhook-secret auth-secret auth-keycloak-secret
+            object-storage-access-key object-storage-secret-key
+        run: |
+          set -euo pipefail
+          test -n "$GCP_PROJECT_ID"
+          test -n "$GCP_REGION"
+          test -n "$GKE_CLUSTER"
+          test -n "$ARTIFACT_REGISTRY_REPOSITORY"
+          test -n "$K8S_NAMESPACE"
+          test -n "$OBJECT_STORAGE_PUBLIC_ENDPOINT"
+          test -n "$CLAMAV_ADDRESS"
+          kubectl get crd gateways.gateway.networking.k8s.io >/dev/null
+          if [[ "$KEDA_ENABLED" == "true" ]]; then
+            kubectl get crd scaledobjects.keda.sh >/dev/null
+          fi
+          if [[ "$SERVICE_MESH_ENABLED" == "true" ]]; then
+            kubectl get crd peerauthentications.security.istio.io authorizationpolicies.security.istio.io >/dev/null
+            kubectl get mutatingwebhookconfigurations -o name | grep -q sidecar-injector
+          fi
+          kubectl get namespace "$K8S_NAMESPACE" >/dev/null
+          kubectl get secret dancehub-secrets -n "$K8S_NAMESPACE" -o json > /tmp/dancehub-secret.json
+          for key in $REQUIRED_SECRET_KEYS; do
+            jq -e --arg key "$key" '.data[$key] | strings | length > 0' /tmp/dancehub-secret.json >/dev/null
+          done
+          rm -f /tmp/dancehub-secret.json
+
+      - name: Configure Artifact Registry authentication
+        run: gcloud auth configure-docker "${GCP_REGION}-docker.pkg.dev" --quiet
+
+      - name: Build and push immutable images
+        run: |
+          set -euo pipefail
+          image_repository="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${ARTIFACT_REGISTRY_REPOSITORY}"
+          skaffold build \
+            --default-repo "$image_repository" \
+            --tag "$DEPLOY_SHA" \
+            --file-output /tmp/dancehub-build-artifacts.json
+
+      - name: Deploy atomically with Helm
+        env:
+          KAFKA_BOOTSTRAP_SERVERS: ${{ vars.KAFKA_BOOTSTRAP_SERVERS }}
+          CART_REDIS_ADDRESS: ${{ vars.CART_REDIS_ADDRESS }}
+          FLASHSALE_REDIS_ADDRESS: ${{ vars.FLASHSALE_REDIS_ADDRESS }}
+          CHAT_REDIS_ADDRESS: ${{ vars.CHAT_REDIS_ADDRESS }}
+          OIDC_ISSUER: ${{ vars.OIDC_ISSUER }}
+          OIDC_JWKS_URL: ${{ vars.OIDC_JWKS_URL }}
+          OTEL_HTTP_ENDPOINT: ${{ vars.OTEL_HTTP_ENDPOINT }}
+          OTEL_GRPC_ENDPOINT: ${{ vars.OTEL_GRPC_ENDPOINT }}
+          OBJECT_STORAGE_ENDPOINT: ${{ vars.OBJECT_STORAGE_ENDPOINT }}
+          OBJECT_STORAGE_BUCKET: ${{ vars.OBJECT_STORAGE_BUCKET }}
+          GATEWAY_STATIC_IP_NAME: ${{ vars.GATEWAY_STATIC_IP_NAME }}
+          CERTIFICATE_MAP_NAME: ${{ vars.CERTIFICATE_MAP_NAME }}
+          STUDENT_HOSTNAME: ${{ vars.STUDENT_HOSTNAME }}
+          TEACHER_HOSTNAME: ${{ vars.TEACHER_HOSTNAME }}
+          ADMIN_HOSTNAME: ${{ vars.ADMIN_HOSTNAME }}
+          API_HOSTNAME: ${{ vars.API_HOSTNAME }}
+        run: |
+          set -euo pipefail
+          for variable in KAFKA_BOOTSTRAP_SERVERS CART_REDIS_ADDRESS FLASHSALE_REDIS_ADDRESS \
+            CHAT_REDIS_ADDRESS OIDC_ISSUER OTEL_HTTP_ENDPOINT OTEL_GRPC_ENDPOINT \
+            GATEWAY_STATIC_IP_NAME CERTIFICATE_MAP_NAME STUDENT_HOSTNAME TEACHER_HOSTNAME \
+            ADMIN_HOSTNAME API_HOSTNAME OBJECT_STORAGE_ENDPOINT OBJECT_STORAGE_BUCKET; do
+            test -n "${!variable}"
+          done
+          # Keycloak serves its JWKS under the issuer; other IdPs can set OIDC_JWKS_URL explicitly.
+          OIDC_JWKS_URL="${OIDC_JWKS_URL:-${OIDC_ISSUER}/protocol/openid-connect/certs}"
+          image_repository="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${ARTIFACT_REGISTRY_REPOSITORY}"
+          helm upgrade --install bay-area-dance-hub helm-chart \
+            --namespace "$K8S_NAMESPACE" \
+            --atomic \
+            --wait \
+            --timeout 20m \
+            -f helm-chart/values-production.yaml \
+            --set-string images.repository="$image_repository" \
+            --set-string images.tag="$DEPLOY_SHA" \
+            --set dancehub.keda.enabled="$KEDA_ENABLED" \
+            --set dancehub.serviceMesh.enabled="$SERVICE_MESH_ENABLED" \
+            --set-string dancehub.serviceMesh.trustDomain="$SERVICE_MESH_TRUST_DOMAIN" \
+            --set-string dancehub.serviceMesh.revision="$SERVICE_MESH_REVISION" \
+            --set-string dancehub.config.kafkaBootstrapServers="$KAFKA_BOOTSTRAP_SERVERS" \
+            --set-string dancehub.config.cartRedisAddress="$CART_REDIS_ADDRESS" \
+            --set-string dancehub.config.flashSaleRedisAddress="$FLASHSALE_REDIS_ADDRESS" \
+            --set-string dancehub.config.chatRedisAddress="$CHAT_REDIS_ADDRESS" \
+            --set-string dancehub.config.oidcIssuer="$OIDC_ISSUER" \
+            --set-string dancehub.config.oidcJwksUrl="$OIDC_JWKS_URL" \
+            --set-string dancehub.config.otelHttpEndpoint="$OTEL_HTTP_ENDPOINT" \
+            --set-string dancehub.config.otelGrpcEndpoint="$OTEL_GRPC_ENDPOINT" \
+            --set-string dancehub.config.objectStorageEndpoint="$OBJECT_STORAGE_ENDPOINT" \
+            --set-string dancehub.config.objectStorageBucket="$OBJECT_STORAGE_BUCKET" \
+            --set-string dancehub.config.objectStoragePublicEndpoint="$OBJECT_STORAGE_PUBLIC_ENDPOINT" \
+            --set-string dancehub.config.clamavAddress="$CLAMAV_ADDRESS" \
+            --set-string dancehub.config.publicApiUrl="https://$API_HOSTNAME" \
+            --set-string dancehub.gatewayApi.staticIpName="$GATEWAY_STATIC_IP_NAME" \
+            --set-string dancehub.gatewayApi.certificateMapName="$CERTIFICATE_MAP_NAME" \
+            --set-string dancehub.gatewayApi.hostnames.student="$STUDENT_HOSTNAME" \
+            --set-string dancehub.gatewayApi.hostnames.teacher="$TEACHER_HOSTNAME" \
+            --set-string dancehub.gatewayApi.hostnames.admin="$ADMIN_HOSTNAME" \
+            --set-string dancehub.gatewayApi.hostnames.api="$API_HOSTNAME"
+
+      - name: Verify rollout and public endpoints
+        env:
+          OIDC_ISSUER: ${{ vars.OIDC_ISSUER }}
+          STUDENT_HOSTNAME: ${{ vars.STUDENT_HOSTNAME }}
+          TEACHER_HOSTNAME: ${{ vars.TEACHER_HOSTNAME }}
+          ADMIN_HOSTNAME: ${{ vars.ADMIN_HOSTNAME }}
+          API_HOSTNAME: ${{ vars.API_HOSTNAME }}
+        run: |
+          set -euo pipefail
+          kubectl rollout status deployment --all -n "$K8S_NAMESPACE" --timeout=15m
+          kubectl wait gateway/dancehub-public -n "$K8S_NAMESPACE" \
+            --for=condition=Programmed --timeout=15m
+          curl --fail --silent --show-error --retry 12 --retry-all-errors \
+            "${OIDC_ISSUER}/.well-known/openid-configuration" >/dev/null
+          curl --fail --silent --show-error --retry 12 --retry-all-errors \
+            "https://${API_HOSTNAME}/healthz" >/dev/null
+          for host in "$STUDENT_HOSTNAME" "$TEACHER_HOSTNAME" "$ADMIN_HOSTNAME"; do
+            curl --fail --silent --show-error --retry 12 --retry-all-errors \
+              "https://${host}/" >/dev/null
+          done

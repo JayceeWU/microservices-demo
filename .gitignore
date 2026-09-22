@@ -1,29 +1,45 @@
+# Editors and OS
 .DS_Store
-.eclipse.buildship.core.prefs
-.gradle/
 .idea/
-.kubernetes-manifests-*/
-.project
-.skaffold-*.yaml
-.terraform.lock.hcl
-.terraform/*
-.venv/
 .vs/
 .vscode/
-*.iml
-*.ipr
-*.iws
-*.pyc
 *.swp
-*.tfstate*
-*.tfvars
 *~
-bin/
-build/
-Dockerfile.pip
-node_modules/
-obj/
-pkg/
-release/wi-kubernetes-manifests.yaml
-vendor/
+
+# Secrets and local environment
+.env
+.env.*
+!.env.example
 gha-creds-*.json
+
+# Dependencies and build output
+node_modules/
+.next/
+.angular/
+dist/
+build/
+bin/
+obj/
+vendor/
+*.tsbuildinfo
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.coverage
+htmlcov/
+
+# Tests, reports and caches
+coverage/
+*.lcov
+test-results/
+playwright-report/
+.playwright-cli/
+load-results/
+.cache/
+compose.log
+output/
+
+# Private working notes
+.agents

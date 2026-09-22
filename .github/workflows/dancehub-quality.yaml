@@ -1,0 +1,112 @@
+name: DanceHub quality gates
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: dancehub-quality-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  contracts-and-render:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with: { fetch-depth: 0 }
+      - name: Validate GitHub Actions
+        uses: docker://rhysd/actionlint:1.7.7
+      - uses: bufbuild/buf-action@v1
+        with: { version: 1.57.2, setup_only: true }
+      - run: buf lint && buf build
+      - run: buf generate && git diff --exit-code
+      - uses: azure/setup-helm@v4
+        with: { version: v3.18.6 }
+      - uses: azure/setup-kubectl@v4
+        with: { version: v1.34.0 }
+      - uses: actions/setup-node@v6
+        with: { node-version: '22.16.0', cache: npm }
+      - run: npm ci --ignore-scripts
+      - name: Enforce English repository content
+        run: npm run language:check
+      - name: Test development network and persistence checks
+        run: node --test scripts/kubernetes-development-checks.test.mjs scripts/kubernetes-security-checks.test.mjs scripts/verify-local.test.mjs scripts/check-markdown-links.test.mjs scripts/check-repository-language.test.mjs
+      - name: Validate local Markdown links and images
+        run: node scripts/check-markdown-links.mjs
+      - name: Lint and render production Helm chart
+        run: |
+          mkdir -p .cache
+          helm lint --strict helm-chart -f helm-chart/values-production.yaml
+          helm template dancehub helm-chart \
+            --namespace dancehub \
+            -f helm-chart/values-production.yaml \
+            > .cache/dancehub-helm-production.yaml
+      - name: Validate the production security baseline
+        run: node scripts/check-kubernetes-security.mjs production .cache/dancehub-helm-production.yaml
+      - name: Render supported Kustomize development environments
+        run: |
+          for overlay in local dev; do
+            kubectl kustomize "kustomize/overlays/${overlay}" > ".cache/dancehub-${overlay}.yaml"
+            node scripts/check-kubernetes-security.mjs development ".cache/dancehub-${overlay}.yaml"
+          done
+      - name: Validate rendered manifests against Kubernetes, Gateway API, KEDA, GKE and Istio schemas
+        uses: docker://ghcr.io/yannh/kubeconform:v0.6.7
+        with:
+          args: >-
+            -strict -summary -kubernetes-version 1.34.0
+            -schema-location default
+            -schema-location https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json
+            .cache/dancehub-helm-production.yaml .cache/dancehub-local.yaml .cache/dancehub-dev.yaml
+      - run: docker compose config --quiet
+      - run: node scripts/check-compose-security.mjs
+  code-and-browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.25.0'
+          cache-dependency-path: src/dancehub/go.sum
+      - uses: actions/setup-dotnet@v5
+        with: { dotnet-version: '9.0' }
+      - uses: actions/setup-node@v6
+        with: { node-version: '22.16.0', cache: npm }
+      - uses: actions/setup-python@v6
+        with: { python-version: '3.13' }
+      - run: npm ci
+      - run: npm --prefix src/paymentservice ci
+      - name: Prettier
+        run: npm run format:check
+      - name: ESLint
+        run: npm run lint
+      - run: npm run generate:api-types && git diff --exit-code -- packages/api-client/openapi.d.ts gen/openapi/dancehub-v1.openapi.json
+      - run: npm run build:web
+      - run: npm test
+        working-directory: src/paymentservice
+      - run: npm run test:web
+      - run: go test ./...
+        working-directory: src/dancehub
+      - run: test -z "$(gofmt -l .)"
+        working-directory: src/dancehub
+      - run: go vet ./...
+        working-directory: src/dancehub
+      - run: dotnet build src/creditservice/creditservice.csproj
+      - run: dotnet test tests/creditservice-domain/creditservice-domain.tests.csproj
+      - run: dotnet build src/cartservice/src/cartservice.csproj
+      - run: dotnet test tests/cartservice/cartservice.tests.csproj
+      - run: python -m py_compile src/eventrelay/relay.py src/eventrelay/saga.py src/recommendationservice/recommendation_server.py src/recommendationservice/projection.py src/recommendationservice/mesh_peer.py
+      - run: python -m unittest discover -s src/recommendationservice -p 'test_*.py'
+      - name: Reproducible isolated Compose acceptance
+        run: npm run verify:local -- compose
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dancehub-test-artifacts
+          include-hidden-files: true
+          path: |
+            .cache/acceptance/**/report.json
+            .cache/acceptance/**/*.log
+            .cache/acceptance/**/playwright-results-report
+            .cache/acceptance/**/playwright-results.xml
+            .cache/acceptance/**/playwright-results
